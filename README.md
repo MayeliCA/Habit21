@@ -1,43 +1,46 @@
-# 🚀 Habit21: Sistema de Gestión de Tiempo y Hábitos
+# 🚀 Habit21: Time Management & Habit Formation System
 
-**Habit21** es una aplicación web de alto rendimiento diseñada para la formación de hábitos mediante el método de **Time Blocking**. El sistema automatiza la rutina de lunes a viernes y permite flexibilidad total los fines de semana, buscando la consolidación de hábitos en ciclos de 21 días.
+**Habit21** is a high-performance web application designed for habit formation using the **Time Blocking** method. The system automates Monday-to-Friday routines while allowing total flexibility on weekends, aiming for habit consolidation in 21-day cycles.
 
 ---
 
-## 🛠️ Stack Tecnológico
+## 🛠️ Tech Stack
 - **Frontend:** React (Vite) + TypeScript.
 - **Backend:** Node.js + Express + TypeScript.
-- **Base de Datos:** PostgreSQL (Relacional).
-- **UI/UX:** - **Tailwind CSS:** Estilos atómicos y responsivos.
-  - **Shadcn/ui:** Componentes de interfaz (Calendarios, Checkboxes).
-  - **Lucide React:** Iconografía minimalista.
+- **Database:** PostgreSQL (Relational).
+- **UI/UX:** - **Tailwind CSS:** Atomic and responsive styling.
+  - **Shadcn/ui:** Interface components (Calendars, Checkboxes).
+  - **Lucide React:** Minimalist iconography.
 
 ---
 
-## 📋 Funcionalidades del MVP (Fase 1)
+## 📋 MVP Features (Phase 1)
 
-### A. Generador de Horario Inteligente
-* **Esquema Semanal:** Interfaz espejo para definir actividades fijas de lunes a viernes.
-* **Flexibilidad:** Editor independiente para excepciones de sábado y domingo.
-* **Categorización:** Clasificación visual por colores (Sueño, Trabajo, Descanso, Ejercicio).
+### A. Intelligent Schedule Generator
+* **Weekly Scheme:** Mirror interface to define fixed activities (Mon-Fri).
+* **Flexibility:** Independent editor for Saturday and Sunday exceptions.
+* **Categorization:** Visual color-coding by activity type (Sleep, Work, Rest, Exercise).
 
-### B. Sistema de Seguimiento (Daily Checklist)
-* **Modo Cumplimiento:** Lista dinámica generada según el bloque horario actual.
-* **Marcado Real-time:** Validación inmediata de cumplimiento de tareas.
+### B. Tracking System (Daily Checklist)
+* **Compliance Mode:** Dynamic task list generated based on the current time block.
+* **Real-time Tracking:** Immediate validation of task completion.
 
-### C. Gamificación: La Racha de 21 Días
-* **Contador Visual:** Widget de progreso "Día X de 21".
-* **Lógica de Racha:** - El contador avanza si el cumplimiento diario es **> 80%**.
-    - Si no se alcanza el umbral, la racha se reinicia o se estanca (según configuración).
+### C. Gamification: The 21-Day Streak
+* **Visual Counter:** "Day X of 21" progress widget.
+* **Streak Logic:** - Counter advances if daily compliance is **> 80%**.
+    - If the threshold isn't met, the streak resets or stalls (configurable).
 
-### D. Dashboard de Productividad
-* **Análisis de Tiempo:** Gráficos de distribución de horas por categoría.
-* **Reporte Plan vs. Real:** Comparativa detallada de ejecución frente a lo planeado.
+### D. Productivity Dashboard
+* **Time Analysis:** Hour distribution charts by category.
+* **Plan vs. Actual Report:** Detailed comparison of execution vs. planning.
 
 ---
 
-## 🤖 Roles de IA (Referencia AGENTS.md)
-Este proyecto se desarrolla bajo la supervisión de tres agentes especializados:
-1. **Arquitecto Fullstack:** Estructura y API.
-2. **Especialista UI/UX:** Interfaz y componentes Shadcn.
-3. **Ingeniero de Lógica:** Algoritmos de gamificación y racha.
+## 🤖 AI Roles (Reference: AGENTS.md)
+This project is developed under the supervision of three specialized agents:
+1. **Fullstack Architect:** Structure and API design.
+2. **UI/UX Specialist:** Interface and Shadcn components.
+3. **Logic Engineer:** Gamification algorithms and streak logic.
+
+---
+**Note:** All source code and technical documentation are in **English**, while the final user interface is localized in **Spanish**.

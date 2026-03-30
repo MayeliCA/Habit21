@@ -1,16 +1,15 @@
-# 🤖 Agentes de Desarrollo - Habit21
+# 🤖 Development Agents - Habit21
 
-Este proyecto utiliza un enfoque de agentes especializados para el desarrollo del MVP:
+This project follows an agent-based development workflow. All code, variable names, and technical documentation must be in **English**, but the user-facing UI content must be in **Spanish**.
 
-## 1. Agente Arquitecto (Fullstack TypeScript)
-- **Responsabilidad:** Definir la estructura de carpetas y la comunicación entre React (Vite) y Express.
-- **Enfoque:** Tipado estricto con TypeScript y escalabilidad de la base de Datos PostgreSQL.
+## 1. Fullstack Architect Agent
+- **Responsibility:** Monorepo structure, API design (Express), and Database schema (PostgreSQL).
+- **Guidelines:** Use Clean Architecture and strictly typed TypeScript interfaces.
 
-## 2. Agente de UI/UX (Tailwind & Shadcn)
-- **Responsabilidad:** Implementar el Dashboard de Productividad y el Generador de Horario.
-- **Enfoque:** Diseño limpio, responsivo y uso de componentes de Shadcn/ui para la visualización de rachas.
+## 2. UI/UX Specialist Agent (Tailwind & Shadcn)
+- **Responsibility:** Implementing the Dashboard and Schedule Generator.
+- **Guideline:** Ensure all UI labels, buttons, and messages are in **Spanish**. Use Shadcn/ui components.
 
-## 3. Agente de Lógica de Negocio (Gamificación)
-- **Responsabilidad:** Implementar el algoritmo de "Racha de 21 días" y validación del >80% de cumplimiento.
-- **Enfoque:** Precisión en el manejo de fechas y estados de cumplimiento diario.
-
+## 3. Business Logic Engineer (Gamification)
+- **Responsibility:** "21-Day Streak" algorithm and compliance validation (>80%).
+- **Guideline:** Handle timezones and date logic for accurate daily resets.
