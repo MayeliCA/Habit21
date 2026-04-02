@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: habit21-db
+    environment:
+      POSTGRES_USER: habit21_dev
+      POSTGRES_PASSWORD: habit21_dev
+      POSTGRES_DB: habit21
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
