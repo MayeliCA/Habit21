@@ -3,7 +3,7 @@ import api from '@/lib/api';
 import type { StreakPreview } from '@shared/types/streak';
 
 interface StreakData {
-  habit: { id: string; title: string; failureMode: string };
+  habit: { id: string; title: string };
   streak: StreakPreview | null;
 }
 
@@ -32,5 +32,11 @@ export function useStreaks() {
     return data;
   }, [fetchStreaks]);
 
-  return { streaks, isLoading, refetch: fetchStreaks, startStreak };
+  const logDay = useCallback(async (streakId: string) => {
+    const { data } = await api.post(`/streaks/${streakId}/log`);
+    await fetchStreaks();
+    return data;
+  }, [fetchStreaks]);
+
+  return { streaks, isLoading, refetch: fetchStreaks, startStreak, logDay };
 }

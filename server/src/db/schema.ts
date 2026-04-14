@@ -1,7 +1,6 @@
 import {
   boolean,
   date,
-  decimal,
   json,
   pgEnum,
   pgTable,
@@ -15,7 +14,6 @@ import {
 
 export const categoryEnum = pgEnum('category', ['academic', 'vital', 'personal', 'escape']);
 export const streakStatusEnum = pgEnum('streak_status', ['active', 'completed', 'failed']);
-export const failureModeEnum = pgEnum('failure_mode', ['reset', 'stall']);
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -63,7 +61,6 @@ export const habits = pgTable('habits', {
     .notNull(),
   title: varchar('title', { length: 200 }).notNull(),
   description: text('description'),
-  failureMode: failureModeEnum('failure_mode').default('stall').notNull(),
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
@@ -75,17 +72,14 @@ export const streaks = pgTable('streaks', {
     .notNull(),
   startDate: date('start_date').notNull(),
   currentDay: smallint('current_day').default(1).notNull(),
-  completedDays: smallint('completed_days').default(0).notNull(),
-  failedDays: smallint('failed_days').default(0).notNull(),
   status: streakStatusEnum('status').default('active').notNull(),
-  failureMode: failureModeEnum('failure_mode').notNull(),
   archivedAt: timestamp('archived_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const dailyCompliance = pgTable(
-  'daily_compliance',
+export const habitLogs = pgTable(
+  'habit_logs',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     streakId: uuid('streak_id')
@@ -94,12 +88,12 @@ export const dailyCompliance = pgTable(
     habitId: uuid('habit_id')
       .references(() => habits.id, { onDelete: 'cascade' })
       .notNull(),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     date: date('date').notNull(),
-    totalTasks: smallint('total_tasks').notNull(),
-    completedTasks: smallint('completed_tasks').notNull(),
-    compliancePct: decimal('compliance_pct', { precision: 5, scale: 2 }).notNull(),
-    passed: boolean('passed').notNull(),
-    finalized: boolean('finalized').default(false).notNull(),
+    done: boolean('done').default(true).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (table) => [unique('daily_compliance_streak_date_unq').on(table.streakId, table.date)],
+  (table) => [unique('habit_log_streak_date_unq').on(table.streakId, table.date)],
 );
