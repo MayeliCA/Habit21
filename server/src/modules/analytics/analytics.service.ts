@@ -139,7 +139,9 @@ function computeSuccessMetric(
   today: string,
 ): SuccessMetric {
   if (activities.length === 0) {
-    return { globalRate: 0, daysTracked: 0, daysPassed: 0, last7Days: [] };
+    const d = new Date(today + 'T12:00:00');
+    const monthDaysTotal = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    return { globalRate: 0, daysTracked: 0, daysPassed: 0, last7Days: [], monthDaysPassed: 0, monthDaysTotal };
   }
 
   const logByDateAndActivity = new Map<string, LogEntry>();
@@ -201,7 +203,12 @@ function computeSuccessMetric(
     if (d === today) break;
   }
 
-  return { globalRate, daysTracked, daysPassed, last7Days };
+  const todayDate = new Date(today + 'T12:00:00');
+  const monthPrefix = today.slice(0, 7);
+  const monthDaysTotal = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0).getDate();
+  const monthDaysPassed = dayCompliances.filter((d) => d.date.startsWith(monthPrefix) && d.passed).length;
+
+  return { globalRate, daysTracked, daysPassed, last7Days, monthDaysPassed, monthDaysTotal };
 }
 
 export async function getAnalytics(userId: string, dateStr: string): Promise<AnalyticsResponse> {

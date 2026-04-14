@@ -21,6 +21,8 @@ export interface SuccessMetric {
   daysTracked: number;
   daysPassed: number;
   last7Days: DayCompliance[];
+  monthDaysPassed: number;
+  monthDaysTotal: number;
 }
 
 export interface AnalyticsResponse {

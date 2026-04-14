@@ -7,13 +7,11 @@ import { habits } from '../../db/schema';
 export const createHabitSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(1000).optional(),
-  failureMode: z.enum(['reset', 'stall']).default('stall'),
 });
 
 export const updateHabitSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(1000).optional(),
-  failureMode: z.enum(['reset', 'stall']).optional(),
   isActive: z.boolean().optional(),
 });
 

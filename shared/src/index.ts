@@ -1,4 +1,4 @@
-export type { Category, StreakStatus, FailureMode } from './types/enums';
+export type { Category, StreakStatus } from './types/enums';
 
 export type {
   ScheduleActivity,
@@ -18,7 +18,7 @@ export type {
 
 export type {
   Streak,
-  DailyCompliance,
+  HabitLog,
   StreakPreview,
 } from './types/streak';
 

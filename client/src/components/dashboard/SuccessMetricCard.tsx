@@ -5,9 +5,16 @@ interface SuccessMetricCardProps {
   metric: SuccessMetric;
 }
 
+function getColorClass(rate: number): string {
+  if (rate >= 80) return 'text-green-600';
+  if (rate >= 50) return 'text-amber-500';
+  return 'text-red-600';
+}
+
 export function SuccessMetricCard({ metric }: SuccessMetricCardProps) {
   const rate = metric.globalRate;
-  const isPassing = rate >= 80;
+  const colorClass = getColorClass(rate);
+  const isConstant = rate >= 80;
   const last7Passed = metric.last7Days.filter((d) => d.passed).length;
   const last7Total = metric.last7Days.length;
 
@@ -19,20 +26,34 @@ export function SuccessMetricCard({ metric }: SuccessMetricCardProps) {
           <p className="text-sm text-muted-foreground">{es.dashboard.successSubtitle}</p>
         </div>
         <div className="text-right">
-          <span
-            className={
-              'text-4xl font-bold ' +
-              (isPassing ? 'text-green-600' : 'text-red-600')
-            }
-          >
+          <span className={'text-4xl font-bold ' + colorClass}>
             {rate.toFixed(1)}%
           </span>
+          <div className="mt-1 flex items-center justify-end gap-1.5">
+            {isConstant ? (
+              <>
+                <svg className="h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                </svg>
+                <span className="text-xs font-medium text-green-600">{es.dashboard.levelConstant}</span>
+              </>
+            ) : (
+              <>
+                <svg className="h-4 w-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.75 10a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
+                </svg>
+                <span className="text-xs font-medium text-amber-500">{es.dashboard.levelInProgress}</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="mt-4 flex items-center gap-4 text-sm">
-        <span className="text-muted-foreground">
-          {metric.daysPassed}/{metric.daysTracked} {es.dashboard.daysPassed}
+      <div className="mt-4 text-sm">
+        <span className={colorClass + ' font-medium'}>
+          {es.dashboard.monthProgress
+            .replace('{passed}', String(metric.monthDaysPassed))
+            .replace('{total}', String(metric.monthDaysTotal))}
         </span>
       </div>
 

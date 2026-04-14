@@ -15,9 +15,10 @@ export const es = {
     completed: '¡Hábito formado!',
     failed: 'Racha perdida',
     active: 'En progreso',
-    compliance: '{pct}% cumplimiento',
-    threshold: 'Necesitas >80% para avanzar',
     startStreak: 'Iniciar racha',
+    markDone: 'Marcar como hecho hoy',
+    todayDone: 'Hecho hoy ✓',
+    resetInfo: 'Si no marcas un día, la racha se reiniciará automáticamente.',
   },
   schedule: {
     title: 'Horario',
@@ -73,9 +74,6 @@ export const es = {
     addHabit: 'Agregar hábito',
     habitName: 'Nombre del hábito',
     description: 'Descripción',
-    failureMode: 'Modo de fallo',
-    resetMode: 'Reiniciar — la racha vuelve a día 1',
-    stallMode: 'Estancar — el día no avanza hasta cumplir',
     active: 'Activo',
   },
   dashboard: {
@@ -94,6 +92,9 @@ export const es = {
     daysTracked: 'días registrados',
     daysPassed: 'días con ≥80%',
     last7Trend: '{passed} de {total} días cumpliste ≥80%',
+    monthProgress: '{passed} / {total} días con ≥80%',
+    levelConstant: 'Nivel: Constante',
+    levelInProgress: 'Nivel: En proceso',
   },
   common: {
     save: 'Guardar',
