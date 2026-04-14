@@ -12,4 +12,10 @@ router.get('/', async (req, res) => {
   return res.json(result);
 });
 
+router.get('/schedule-streak', async (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const result = await analyticsService.getScheduleStreak(req.user!.userId, today);
+  return res.json(result);
+});
+
 export default router;

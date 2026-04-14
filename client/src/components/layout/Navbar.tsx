@@ -1,12 +1,13 @@
-import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Calendar, CheckSquare, Trophy, LogOut } from 'lucide-react';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Calendar, CheckSquare, Trophy, LogOut, HomeIcon } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { es } from '@/i18n/es';
 
 const navItems = [
-  { to: '/', label: es.nav.dashboard, icon: LayoutDashboard },
-  { to: '/schedule', label: es.nav.schedule, icon: Calendar },
+  { to: '/', label: es.nav.home, icon: HomeIcon },
   { to: '/checklist', label: es.nav.checklist, icon: CheckSquare },
+  { to: '/panel', label: es.nav.dashboard, icon: LayoutDashboard },
+  { to: '/schedule', label: es.nav.schedule, icon: Calendar },
   { to: '/habits', label: es.nav.habits, icon: Trophy },
 ];
 
@@ -22,14 +23,14 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
       <div className="flex h-14 items-center px-6">
-        <span className="text-lg font-bold tracking-tight">{es.app.name}</span>
+        <Link to="/" className="text-lg font-bold tracking-tight">{es.app.name}</Link>
 
         <nav className="ml-8 flex items-center gap-1">
           {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
-              end={to === '/'}
+              end={to === '/' || to === '/panel'}
               className={({ isActive }) =>
                 `flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   isActive

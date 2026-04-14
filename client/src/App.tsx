@@ -7,6 +7,7 @@ import Dashboard from '@/pages/Dashboard';
 import Schedule from '@/pages/Schedule';
 import DailyChecklist from '@/pages/DailyChecklist';
 import Habits from '@/pages/Habits';
+import Home from '@/pages/Home';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -48,7 +49,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/panel" element={<Dashboard />} />
         <Route path="/schedule" element={<Schedule />} />
         <Route path="/checklist" element={<DailyChecklist />} />
         <Route path="/habits" element={<Habits />} />

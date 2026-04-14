@@ -34,4 +34,6 @@ export type {
   AnalyticsResponse,
   SuccessMetric,
   DayCompliance,
+  DayTotal,
+  WeekTotal,
 } from './types/analytics';

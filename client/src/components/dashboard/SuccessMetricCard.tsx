@@ -19,14 +19,14 @@ export function SuccessMetricCard({ metric }: SuccessMetricCardProps) {
   const last7Total = metric.last7Days.length;
 
   return (
-    <div className="rounded-lg border bg-card p-6 shadow-sm">
+    <div className="rounded-lg border bg-card p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">{es.dashboard.successMetric}</h2>
-          <p className="text-sm text-muted-foreground">{es.dashboard.successSubtitle}</p>
+          <h2 className="text-sm font-semibold">{es.dashboard.successMetric}</h2>
+          <p className="text-xs text-muted-foreground">{es.dashboard.successSubtitle}</p>
         </div>
         <div className="text-right">
-          <span className={'text-4xl font-bold ' + colorClass}>
+          <span className={'text-2xl font-bold ' + colorClass}>
             {rate.toFixed(1)}%
           </span>
           <div className="mt-1 flex items-center justify-end gap-1.5">
@@ -49,7 +49,7 @@ export function SuccessMetricCard({ metric }: SuccessMetricCardProps) {
         </div>
       </div>
 
-      <div className="mt-4 text-sm">
+      <div className="mt-3 text-xs">
         <span className={colorClass + ' font-medium'}>
           {es.dashboard.monthProgress
             .replace('{passed}', String(metric.monthDaysPassed))
@@ -58,14 +58,14 @@ export function SuccessMetricCard({ metric }: SuccessMetricCardProps) {
       </div>
 
       {last7Total > 0 && (
-        <div className="mt-4 border-t pt-4">
+        <div className="mt-3 border-t pt-3">
           <div className="flex items-center gap-3">
             <div className="flex gap-1.5">
               {metric.last7Days.map((day) => (
                 <span
                   key={day.date}
                   className={
-                    'inline-block h-5 w-5 rounded-full border-2 ' +
+                    'inline-block h-4 w-4 rounded-full border-2 ' +
                     (day.passed
                       ? 'border-green-500 bg-green-500'
                       : 'border-slate-300 bg-slate-100')
