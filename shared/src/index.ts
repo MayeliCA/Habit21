@@ -28,3 +28,10 @@ export type {
   AuthResponse,
   JWTPayload,
 } from './types/auth';
+
+export type {
+  CategoryBreakdown,
+  AnalyticsResponse,
+  SuccessMetric,
+  DayCompliance,
+} from './types/analytics';

@@ -26,10 +26,29 @@ export default function DailyChecklist() {
   }, [today]);
 
   const toggleDone = async (activityId: string) => {
-    const { data } = await api.patch<ActivityWithLog>(`/tasks/${activityId}/toggle`, null, {
-      params: { date: today },
-    });
-    setActivities((prev) => prev.map((a) => (a.id === activityId ? data : a)));
+    setActivities((prev) =>
+      prev.map((a) =>
+        a.id === activityId
+          ? { ...a, log: a.log ? { ...a.log, done: !a.log.done } : { id: '', activityId, userId: '', date: today, done: true, doneAt: new Date().toISOString() } }
+          : a
+      )
+    );
+
+    try {
+      const { data } = await api.patch<ActivityWithLog>(`/tasks/${activityId}/toggle`, {}, {
+        params: { date: today },
+      });
+      setActivities((prev) => prev.map((a) => (a.id === activityId ? data : a)));
+    } catch (err) {
+      console.error('Failed to toggle activity:', err);
+      setActivities((prev) =>
+        prev.map((a) =>
+          a.id === activityId
+            ? { ...a, log: a.log ? { ...a.log, done: !a.log.done } : null }
+            : a
+        )
+      );
+    }
   };
 
   const total = activities.length;
