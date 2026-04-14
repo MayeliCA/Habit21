@@ -1,10 +1,10 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    "rootDir": "..",
     "outDir": "dist",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "baseUrl": ".",
     "paths": {
       "@shared/*": ["../shared/src/*"]
     }
