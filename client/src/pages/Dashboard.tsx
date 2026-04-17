@@ -116,6 +116,7 @@ export default function Dashboard() {
             data={weeklyByDay}
             title={es.dashboard.weekly}
             insight={getWeeklyInsight(weeklyByDay)}
+            badgeInsight
           />
           <TimelineBarChart
             data={monthlyByWeek}

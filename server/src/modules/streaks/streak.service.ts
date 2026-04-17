@@ -26,7 +26,7 @@ export async function getActiveStreakForHabit(habitId: string) {
   });
 }
 
-export async function createStreak(habitId: string) {
+export async function createStreak(habitId: string, userId: string) {
   const today = new Date().toISOString().slice(0, 10);
   const [streak] = await db
     .insert(streaks)
@@ -37,6 +37,17 @@ export async function createStreak(habitId: string) {
       status: 'active',
     })
     .returning();
+
+  await db
+    .insert(habitLogs)
+    .values({
+      streakId: streak.id,
+      habitId,
+      userId,
+      date: today,
+      done: true,
+    });
+
   return streak;
 }
 
@@ -68,7 +79,7 @@ export async function logHabitDay(streakId: string, userId: string, dateStr: str
     .returning();
 
   const newCurrentDay = streak.currentDay + 1;
-  const newStatus = newCurrentDay > 21 ? 'completed' : 'active';
+  const newStatus = newCurrentDay >= 21 ? 'completed' : 'active';
 
   await db
     .update(streaks)
@@ -150,7 +161,7 @@ export async function runMidnightCron() {
             })
             .where(eq(streaks.id, streak.id));
 
-          await createStreak(streak.habitId);
+          await createStreak(streak.habitId, habit.userId);
 
           console.log(`[Cron] Streak ${streak.id} reset (no log for ${yesterday})`);
         }

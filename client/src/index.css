@@ -34,3 +34,54 @@ body {
   color: var(--color-foreground);
   font-family: system-ui, -apple-system, sans-serif;
 }
+
+@keyframes fire-glow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(251, 146, 60, 0.6)); }
+  50% { filter: drop-shadow(0 0 12px rgba(251, 146, 60, 0.9)); }
+}
+
+@keyframes fire-ignite {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes spark-1 {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-8px, -14px) scale(0); }
+}
+
+@keyframes spark-2 {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(6px, -16px) scale(0); }
+}
+
+@keyframes spark-3 {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(10px, -10px) scale(0); }
+}
+
+.fire-glow {
+  animation: fire-glow 1.5s ease-in-out infinite;
+}
+
+.fire-ignite {
+  animation: fire-ignite 0.4s ease-out;
+}
+
+.spark-container {
+  pointer-events: none;
+}
+
+.spark-1 { animation: spark-1 0.6s ease-out forwards; }
+.spark-2 { animation: spark-2 0.5s ease-out 0.1s forwards; }
+.spark-3 { animation: spark-3 0.55s ease-out 0.05s forwards; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.float-slow {
+  animation: float 3s ease-in-out infinite;
+}

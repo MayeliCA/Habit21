@@ -14,9 +14,10 @@ interface TimelineBarChartProps {
   data: { planned: number; completed: number; label: string }[];
   title: string;
   insight?: string;
+  badgeInsight?: boolean;
 }
 
-export function TimelineBarChart({ data, title, insight }: TimelineBarChartProps) {
+export function TimelineBarChart({ data, title, insight, badgeInsight }: TimelineBarChartProps) {
   const hasData = data.some((d) => d.planned > 0 || d.completed > 0);
 
   if (!hasData) {
@@ -38,7 +39,14 @@ export function TimelineBarChart({ data, title, insight }: TimelineBarChartProps
 
   return (
     <div className="rounded-lg border bg-card p-4 shadow-sm">
-      <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        {badgeInsight && insight && (
+          <span className="rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">
+            {insight}
+          </span>
+        )}
+      </div>
       <ResponsiveContainer width="100%" height={155}>
         <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
           <XAxis dataKey="name" tick={{ fontSize: 11 }} />
@@ -73,7 +81,7 @@ export function TimelineBarChart({ data, title, insight }: TimelineBarChartProps
           </div>
         ))}
       </div>
-      {insight && (
+      {insight && !badgeInsight && (
         <p className="mt-3 text-xs italic text-muted-foreground">{insight}</p>
       )}
     </div>

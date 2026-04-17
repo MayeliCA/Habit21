@@ -46,7 +46,7 @@ export async function startStreak(req: Request<{ habitId: string }>, res: Respon
   const existing = await streakService.getActiveStreakForHabit(habitId);
   if (existing) return res.status(409).json({ error: 'Active streak already exists for this habit' });
 
-  const streak = await streakService.createStreak(habitId);
+  const streak = await streakService.createStreak(habitId, req.user!.userId);
   return res.status(201).json(streak);
 }
 
