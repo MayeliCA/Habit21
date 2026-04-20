@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '../../db';
 import { streaks, habitLogs, habits } from '../../db/schema';
 import type { Streak, HabitLog, StreakPreview } from '@shared/types/streak';
@@ -119,11 +119,83 @@ export async function getStreakPreview(habitId: string): Promise<StreakPreview |
   };
 }
 
+export async function hasRecentlyFailedStreak(habitId: string): Promise<boolean> {
+  const twoDaysAgo = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 2);
+    return d.toISOString().slice(0, 10);
+  })();
+
+  const failed = await db.query.streaks.findFirst({
+    where: and(
+      eq(streaks.habitId, habitId),
+      eq(streaks.status, 'failed'),
+    ),
+    orderBy: (s, { desc }) => [desc(s.updatedAt)],
+  });
+
+  if (!failed || !failed.updatedAt) return false;
+
+  const failedDate = new Date(failed.updatedAt).toISOString().slice(0, 10);
+  return failedDate >= twoDaysAgo;
+}
+
 export async function getStreakLogs(streakId: string) {
   return db.query.habitLogs.findMany({
     where: eq(habitLogs.streakId, streakId),
     orderBy: (l, { asc }) => [asc(l.date)],
   });
+}
+
+export async function validateActiveStreaks(userId: string): Promise<string[]> {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const userHabits = await db.query.habits.findMany({
+    where: and(eq(habits.userId, userId), eq(habits.isActive, true)),
+    columns: { id: true },
+  });
+  const habitIds = userHabits.map((h) => h.id);
+
+  if (habitIds.length === 0) return [];
+
+  const activeStreaks = await db.query.streaks.findMany({
+    where: sql`${streaks.habitId} IN ${habitIds} AND ${streaks.status} = 'active'`,
+  });
+
+  const broken: string[] = [];
+
+  for (const streak of activeStreaks) {
+    const lastLog = await db.query.habitLogs.findFirst({
+      where: eq(habitLogs.streakId, streak.id),
+      orderBy: desc(habitLogs.date),
+      columns: { date: true },
+    });
+
+    if (!lastLog) continue;
+
+    const lastDate = new Date(lastLog.date + 'T12:00:00');
+    const todayDate = new Date(today + 'T12:00:00');
+    const diffDays = Math.round((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 1) {
+      await db
+        .update(streaks)
+        .set({
+          status: 'failed',
+          archivedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(streaks.id, streak.id));
+
+      const habit = await db.query.habits.findFirst({
+        where: eq(habits.id, streak.habitId),
+        columns: { title: true },
+      });
+      if (habit) broken.push(habit.title);
+    }
+  }
+
+  return broken;
 }
 
 export async function runMidnightCron() {

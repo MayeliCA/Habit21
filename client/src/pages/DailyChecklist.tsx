@@ -2,14 +2,29 @@ import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { es } from '@/i18n/es';
 import { ComplianceBar } from '@/components/streaks/ComplianceBar';
+import { BookOpen, Heart, Coffee, Gamepad2 } from 'lucide-react';
 import type { ActivityWithLog } from '@shared/types/schedule';
 import type { Category } from '@shared/types/enums';
 
-const CATEGORY_COLORS: Record<Category, string> = {
-  academic: 'bg-blue-100 text-blue-800',
-  vital: 'bg-green-100 text-green-800',
-  personal: 'bg-purple-100 text-purple-800',
-  escape: 'bg-amber-100 text-amber-800',
+const CATEGORY_ICON: Record<Category, React.ElementType> = {
+  academic: BookOpen,
+  vital: Heart,
+  personal: Coffee,
+  escape: Gamepad2,
+};
+
+const CATEGORY_ICON_COLOR: Record<Category, string> = {
+  academic: 'text-blue-500',
+  vital: 'text-green-500',
+  personal: 'text-purple-500',
+  escape: 'text-amber-500',
+};
+
+const CATEGORY_DOT: Record<Category, string> = {
+  academic: 'bg-blue-500',
+  vital: 'bg-green-500',
+  personal: 'bg-purple-500',
+  escape: 'bg-amber-500',
 };
 
 export default function DailyChecklist() {
@@ -56,54 +71,69 @@ export default function DailyChecklist() {
   const pct = total > 0 ? (completed / total) * 100 : 0;
 
   if (loading) {
-    return <p className="text-muted-foreground">{es.common.loading}</p>;
+    return (
+      <div className="space-y-6 page-fade-in">
+        <div className="flex items-center justify-between">
+          <div className="skeleton h-8 w-44 rounded-lg" />
+          <div className="skeleton h-5 w-28 rounded" />
+        </div>
+        <div className="skeleton h-16 w-full rounded-xl" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="skeleton h-14 w-full rounded-xl" />
+        ))}
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{es.checklist.todayTasks}</h1>
         <span className="text-sm text-muted-foreground">{today}</span>
       </div>
 
       {total > 0 && (
-        <div className="rounded-lg border bg-card p-4 shadow-sm">
-          <h3 className="mb-3 text-sm font-semibold">{es.checklist.todayStatus}</h3>
+        <div className="rounded-xl border bg-white p-4 shadow-sm">
           <ComplianceBar compliancePct={pct} passed={pct > 80} />
         </div>
       )}
 
       {activities.length === 0 ? (
-        <div className="rounded-lg border bg-card p-8 text-center text-muted-foreground">
+        <div className="rounded-xl border bg-white p-8 text-center text-muted-foreground shadow-sm">
           {es.checklist.noTasks}
         </div>
       ) : (
-        <div className="space-y-2">
-          {activities.map((a) => {
-            const isDone = a.log?.done ?? false;
-            return (
-              <div
-                key={a.id}
-                className="flex items-center gap-3 rounded-lg border bg-card p-3 shadow-sm"
-              >
-                <input
-                  type="checkbox"
-                  checked={isDone}
-                  onChange={() => toggleDone(a.id)}
-                  className="h-4 w-4 rounded border"
-                />
-                <span className="whitespace-nowrap text-sm font-mono text-muted-foreground">
-                  {a.time}{a.endTime ? ` - ${a.endTime}` : ''}
-                </span>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${CATEGORY_COLORS[a.category]}`}>
-                  {es.category[a.category]}
-                </span>
-                <span className={isDone ? 'flex-1 text-sm text-muted-foreground line-through' : 'flex-1 text-sm'}>
-                  {a.activity}
-                </span>
-              </div>
-            );
-          })}
+        <div className="relative ml-3">
+          <div className="absolute left-0 top-3 bottom-3 w-px bg-gray-200" />
+          <div className="space-y-2">
+            {activities.map((a) => {
+              const isDone = a.log?.done ?? false;
+              const Icon = CATEGORY_ICON[a.category] ?? BookOpen;
+              return (
+                <div key={a.id} className="flex items-center">
+                  <div className="relative z-10 -ml-3 flex shrink-0 items-center justify-center">
+                    <div className={`h-3.5 w-3.5 rounded-full border-2 border-white shadow-sm ${CATEGORY_DOT[a.category]}`} />
+                  </div>
+
+                  <div className={`ml-3 flex flex-1 items-center gap-3 rounded-xl border bg-white py-3 pr-4 pl-4 shadow-sm transition-all ${isDone ? 'opacity-60' : ''}`}>
+                    <input
+                      type="checkbox"
+                      checked={isDone}
+                      onChange={() => toggleDone(a.id)}
+                      className="h-5 w-5 shrink-0 rounded border-gray-300 accent-primary cursor-pointer"
+                    />
+                    <span className={`shrink-0 whitespace-nowrap text-sm font-mono ${isDone ? 'text-gray-300' : 'text-muted-foreground'}`}>
+                      {a.time}{a.endTime ? `–${a.endTime}` : ''}
+                    </span>
+                    <Icon className={`h-4 w-4 shrink-0 ${CATEGORY_ICON_COLOR[a.category]}`} strokeWidth={1.5} />
+                    <span className={`flex-1 text-sm font-medium ${isDone ? 'text-gray-300' : 'text-[#1e293b]'}`}>
+                      {a.activity}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

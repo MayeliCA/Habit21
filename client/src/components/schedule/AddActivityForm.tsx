@@ -3,6 +3,13 @@ import type { Category } from '@shared/types/enums';
 import { es } from '@/i18n/es';
 
 const CATEGORY_OPTIONS: Category[] = ['academic', 'vital', 'personal', 'escape'];
+
+const CATEGORY_CONFIG: Record<Category, { color: string; bg: string; dot: string }> = {
+  vital: { color: 'text-green-700', bg: 'bg-green-50', dot: 'bg-green-500' },
+  academic: { color: 'text-blue-700', bg: 'bg-blue-50', dot: 'bg-blue-500' },
+  personal: { color: 'text-purple-700', bg: 'bg-purple-50', dot: 'bg-purple-500' },
+  escape: { color: 'text-amber-700', bg: 'bg-amber-50', dot: 'bg-amber-500' },
+};
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DAY_KEYS: Record<number, keyof typeof es.schedule.days> = {
   0: 'sun',
@@ -101,18 +108,27 @@ export function AddActivityForm({ disabled, onSubmit }: AddActivityFormProps) {
           <label className="text-xs font-medium text-muted-foreground">
             {es.schedule.category}
           </label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value as Category)}
-            disabled={disabled}
-            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
-          >
-            {CATEGORY_OPTIONS.map((c) => (
-              <option key={c} value={c}>
-                {es.category[c]}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-wrap gap-1.5">
+            {CATEGORY_OPTIONS.map((cat) => {
+              const cfg = CATEGORY_CONFIG[cat];
+              const isSelected = category === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setCategory(cat)}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-all ${
+                    isSelected
+                      ? `${cfg.bg} ${cfg.color} ring-1 ring-current/20`
+                      : 'text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  <span className={`inline-block h-2 w-2 rounded-full ${cfg.dot}`} />
+                  {es.categoryShort[cat]}
+                </button>
+              );
+            })}
+          </div>
         </div>
         <div className="min-w-[180px] flex-1 space-y-1">
           <label className="text-xs font-medium text-muted-foreground">
@@ -131,7 +147,7 @@ export function AddActivityForm({ disabled, onSubmit }: AddActivityFormProps) {
         <button
           type="submit"
           disabled={disabled || !startTime || !endTime || !activity.trim() || startTime >= endTime || daysOfWeek.length === 0}
-          className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          className="rounded-xl bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-[0_0_12px_rgba(30,41,59,0.15)] hover:bg-primary/90 disabled:opacity-50"
         >
           {es.schedule.addActivity}
         </button>

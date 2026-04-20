@@ -5,6 +5,8 @@ import { habits, streaks } from '../../db/schema';
 import * as streakService from './streak.service';
 
 export async function listStreaks(req: Request, res: Response) {
+  const brokenStreaks = await streakService.validateActiveStreaks(req.user!.userId);
+
   const userHabits = await db.query.habits.findMany({
     where: and(eq(habits.userId, req.user!.userId), eq(habits.isActive, true)),
   });
@@ -12,10 +14,11 @@ export async function listStreaks(req: Request, res: Response) {
   const result = [];
   for (const habit of userHabits) {
     const preview = await streakService.getStreakPreview(habit.id);
-    result.push({ habit, streak: preview });
+    const recentlyFailed = !preview ? await streakService.hasRecentlyFailedStreak(habit.id) : false;
+    result.push({ habit, streak: preview, recentlyFailed });
   }
 
-  return res.json(result);
+  return res.json({ streaks: result, brokenStreaks });
 }
 
 export async function getStreakDetail(req: Request<{ id: string }>, res: Response) {

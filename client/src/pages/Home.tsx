@@ -160,7 +160,7 @@ export default function Home() {
     : es.home.habitsStreakZero;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-fade-in">
       <NextActivityCard activities={activities} />
 
       <div className="grid gap-4 sm:grid-cols-2">

@@ -74,7 +74,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 page-fade-in">
         <h1 className="text-2xl font-bold">{es.dashboard.title}</h1>
         <p className="text-muted-foreground">{es.common.loading}</p>
       </div>
@@ -96,7 +96,7 @@ export default function Dashboard() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-fade-in">
       <h1 className="text-2xl font-bold">{es.dashboard.title}</h1>
 
       {analytics?.successMetric && (

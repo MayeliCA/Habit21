@@ -60,6 +60,7 @@ export const habits = pgTable('habits', {
     .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
   title: varchar('title', { length: 200 }).notNull(),
+  category: categoryEnum('category').default('vital').notNull(),
   description: text('description'),
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

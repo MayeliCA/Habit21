@@ -1,16 +1,20 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, count } from 'drizzle-orm';
 import { db } from '../../db';
 import { habits } from '../../db/schema';
 
+const MAX_HABITS = 6;
+
 export const createHabitSchema = z.object({
   title: z.string().min(1).max(200),
+  category: z.enum(['academic', 'vital', 'personal', 'escape']).optional(),
   description: z.string().max(1000).optional(),
 });
 
 export const updateHabitSchema = z.object({
   title: z.string().min(1).max(200).optional(),
+  category: z.enum(['academic', 'vital', 'personal', 'escape']).optional(),
   description: z.string().max(1000).optional(),
   isActive: z.boolean().optional(),
 });
@@ -25,6 +29,16 @@ export async function listHabits(req: Request, res: Response) {
 
 export async function createHabit(req: Request, res: Response) {
   const input = createHabitSchema.parse(req.body);
+
+  const [row] = await db
+    .select({ count: count() })
+    .from(habits)
+    .where(and(eq(habits.userId, req.user!.userId), eq(habits.isActive, true)));
+
+  if (row.count >= MAX_HABITS) {
+    return res.status(400).json({ error: 'Maximum of 6 active habits reached' });
+  }
+
   const [habit] = await db
     .insert(habits)
     .values({ userId: req.user!.userId, ...input })
