@@ -3,6 +3,7 @@ import { Flame, Crown, Trophy } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import type { StreakPreview } from '@shared/types/streak';
 import { es } from '@/i18n/es';
+import { useSettings } from '@/hooks/useSettings';
 
 interface StreakWidgetProps {
   streakPreview: StreakPreview;
@@ -11,6 +12,7 @@ interface StreakWidgetProps {
 
 export function StreakWidget({ streakPreview, onLogToday }: StreakWidgetProps) {
   const { streak, todayLog } = streakPreview;
+  const { settings } = useSettings();
   const progress = Math.min((streak.currentDay / 21) * 100, 100);
   const canLogToday = streak.status === 'active' && !todayLog;
   const isActive = !!todayLog || streak.status === 'completed';
@@ -21,7 +23,7 @@ export function StreakWidget({ streakPreview, onLogToday }: StreakWidgetProps) {
   const btnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (isCompleted && !celebrated) {
+    if (isCompleted && !celebrated && settings.celebrationsEnabled) {
       setCelebrated(true);
       const rect = btnRef.current?.getBoundingClientRect();
       const x = rect ? (rect.left + rect.width / 2) / window.innerWidth : 0.5;

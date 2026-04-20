@@ -3,6 +3,8 @@ import { Trash2, BookOpen, Heart, Coffee, Gamepad2, AlertTriangle } from 'lucide
 import type { ActivityWithLog } from '@shared/types/schedule';
 import type { Category } from '@shared/types/enums';
 import { es } from '@/i18n/es';
+import { useSettings } from '@/hooks/useSettings';
+import { formatClockTime } from '@/lib/format';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +39,7 @@ export function ActivityRow({ item, onDelete }: ActivityRowProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const Icon = CATEGORY_ICON[item.category] ?? BookOpen;
   const colors = CATEGORY_COLORS[item.category];
+  const { settings } = useSettings();
 
   return (
     <>
@@ -48,7 +51,7 @@ export function ActivityRow({ item, onDelete }: ActivityRowProps) {
 
         <div className={`ml-3 flex flex-1 items-center gap-3 rounded-xl border border-l-[3px] bg-white py-3 pr-4 pl-4 shadow-sm transition-shadow hover:shadow-md ${colors.border}`}>
           <span className="shrink-0 whitespace-nowrap text-sm font-mono text-muted-foreground">
-            {item.time}{item.endTime ? `–${item.endTime}` : ''}
+            {formatClockTime(item.time, settings.timeFormat)}{item.endTime ? `–${formatClockTime(item.endTime, settings.timeFormat)}` : ''}
           </span>
 
           <Icon className={`h-4 w-4 shrink-0 ${colors.icon}`} strokeWidth={1.5} />

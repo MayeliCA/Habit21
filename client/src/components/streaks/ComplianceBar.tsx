@@ -1,22 +1,28 @@
+import { useSettings } from '@/hooks/useSettings';
+
 interface ComplianceBarProps {
   compliancePct: number;
   passed: boolean;
 }
 
 export function ComplianceBar({ compliancePct, passed }: ComplianceBarProps) {
+  const { settings } = useSettings();
+  const threshold = settings.successThreshold;
+  const isAboveThreshold = compliancePct >= threshold;
   const isPerfect = compliancePct >= 100;
+
   const barColor = isPerfect
     ? 'bg-green-500'
-    : passed
+    : isAboveThreshold
       ? 'bg-green-500'
-      : compliancePct >= 50
+      : compliancePct >= threshold * 0.6
         ? 'bg-orange-500'
         : 'bg-red-500';
   const textColor = isPerfect
     ? 'text-green-600'
-    : passed
+    : isAboveThreshold
       ? 'text-green-600'
-      : compliancePct >= 50
+      : compliancePct >= threshold * 0.6
         ? 'text-orange-600'
         : 'text-red-600';
 
@@ -37,11 +43,11 @@ export function ComplianceBar({ compliancePct, passed }: ComplianceBarProps) {
       <div className="relative h-0">
         <div
           className="absolute top-0 h-1.5 w-px bg-foreground/30"
-          style={{ left: '80%' }}
+          style={{ left: `${threshold}%` }}
         />
       </div>
       <p className="text-[10px] text-muted-foreground">
-        {isPerfect ? '¡Cumplimiento perfecto!' : passed ? '¡Sobre el umbral del 80%!' : compliancePct >= 50 ? 'Te falta un poco más para llegar al 80%' : 'Necesitas >80% para avanzar'}
+        {isPerfect ? '¡Cumplimiento perfecto!' : isAboveThreshold ? `¡Sobre el umbral del ${threshold}%!` : compliancePct >= threshold * 0.6 ? `Te falta un poco más para llegar al ${threshold}%` : `Necesitas >${threshold}% para avanzar`}
       </p>
     </div>
   );

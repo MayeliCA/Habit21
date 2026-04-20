@@ -3,6 +3,8 @@ import api from '@/lib/api';
 import { es } from '@/i18n/es';
 import { ComplianceBar } from '@/components/streaks/ComplianceBar';
 import { BookOpen, Heart, Coffee, Gamepad2 } from 'lucide-react';
+import { useSettings } from '@/hooks/useSettings';
+import { formatClockTime } from '@/lib/format';
 import type { ActivityWithLog } from '@shared/types/schedule';
 import type { Category } from '@shared/types/enums';
 
@@ -30,6 +32,7 @@ const CATEGORY_DOT: Record<Category, string> = {
 export default function DailyChecklist() {
   const [activities, setActivities] = useState<ActivityWithLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const { settings } = useSettings();
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -94,7 +97,7 @@ export default function DailyChecklist() {
 
       {total > 0 && (
         <div className="rounded-xl border bg-white p-4 shadow-sm">
-          <ComplianceBar compliancePct={pct} passed={pct > 80} />
+          <ComplianceBar compliancePct={pct} passed={pct >= settings.successThreshold} />
         </div>
       )}
 
@@ -123,7 +126,7 @@ export default function DailyChecklist() {
                       className="h-5 w-5 shrink-0 rounded border-gray-300 accent-primary cursor-pointer"
                     />
                     <span className={`shrink-0 whitespace-nowrap text-sm font-mono ${isDone ? 'text-gray-300' : 'text-muted-foreground'}`}>
-                      {a.time}{a.endTime ? `–${a.endTime}` : ''}
+                      {formatClockTime(a.time, settings.timeFormat)}{a.endTime ? `–${formatClockTime(a.endTime, settings.timeFormat)}` : ''}
                     </span>
                     <Icon className={`h-4 w-4 shrink-0 ${CATEGORY_ICON_COLOR[a.category]}`} strokeWidth={1.5} />
                     <span className={`flex-1 text-sm font-medium ${isDone ? 'text-gray-300' : 'text-[#1e293b]'}`}>
