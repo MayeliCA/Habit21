@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '@/lib/api';
 import { es } from '@/i18n/es';
-import { CategoryChart } from '@/components/dashboard/CategoryChart';
-import { BalancePieChart } from '@/components/dashboard/BalancePieChart';
+import { CategoryProgressBars } from '@/components/dashboard/CategoryProgressBars';
 import type { ActivityWithLog } from '@shared/types/schedule';
-import type { AnalyticsResponse, CategoryBreakdown } from '@shared/types/analytics';
+import type { AnalyticsResponse, CategoryBreakdown, DayTotal } from '@shared/types/analytics';
 import type { ScheduleStreak } from '@shared/types/analytics';
 import type { StreakPreview } from '@shared/types/streak';
 import type { Category } from '@shared/types/enums';
-import { ArrowRight, Flame, Star } from 'lucide-react';
+import { ArrowRight, Flame, Star, Crown } from 'lucide-react';
+import { useSettings } from '@/hooks/useSettings';
+import { formatClockTime } from '@/lib/format';
 
 const CATEGORY_COLORS: Record<Category, string> = {
   academic: 'bg-blue-100 text-blue-800',
@@ -40,6 +41,7 @@ function getNextActivity(activities: ActivityWithLog[]): ActivityWithLog | null 
 }
 
 function NextActivityCard({ activities }: { activities: ActivityWithLog[] }) {
+  const { settings } = useSettings();
   const allDone = activities.length > 0 && activities.every((a) => a.log?.done);
   const noActivities = activities.length === 0;
   const next = getNextActivity(activities);
@@ -67,7 +69,7 @@ function NextActivityCard({ activities }: { activities: ActivityWithLog[] }) {
               <p className="mt-2 text-lg font-semibold">{next.activity}</p>
               <div className="mt-1 flex items-center gap-3">
                 <span className="font-mono text-sm text-muted-foreground">
-                  {next.time}{next.endTime ? ` - ${next.endTime}` : ''}
+                  {formatClockTime(next.time, settings.timeFormat)}{next.endTime ? ` - ${formatClockTime(next.endTime, settings.timeFormat)}` : ''}
                 </span>
                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${CATEGORY_COLORS[next.category]}`}>
                   {es.category[next.category].split('(')[0].trim()}
@@ -82,30 +84,262 @@ function NextActivityCard({ activities }: { activities: ActivityWithLog[] }) {
   );
 }
 
-function StreakCard({
-  to,
-  icon: Icon,
-  label,
-  value,
-  subtitle,
+const DAY_KEYS_BY_JS: Record<number, string> = { 0: 'sun', 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri', 6: 'sat' };
+
+function ScheduleStreakCard({
+  streak,
+  pendingStreak,
+  weeklyByDay,
 }: {
-  to: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-  subtitle: string;
+  streak: number;
+  pendingStreak: number;
+  weeklyByDay: DayTotal[];
 }) {
+  const { settings } = useSettings();
+  const threshold = settings.successThreshold;
+  const today = new Date().toISOString().slice(0, 10);
+
+  const todayEntry = weeklyByDay.find((d) => d.date === today);
+  const todayPct = todayEntry && todayEntry.planned > 0
+    ? (todayEntry.completed / todayEntry.planned) * 100
+    : 0;
+  const todayPassed = todayPct >= threshold;
+
+  const isActive = todayPassed && streak > 0;
+  const displayStreak = streak > 0 ? streak : pendingStreak;
+
+  let streakLabel = '';
+  let streakColor = '';
+  if (isActive) {
+    streakLabel = es.home.scheduleStreakDays.replace('{count}', String(streak));
+    streakColor = '';
+  } else if (displayStreak > 0) {
+    streakLabel = es.home.scheduleStreakDays.replace('{count}', String(displayStreak));
+    streakColor = 'text-muted-foreground';
+  } else {
+    streakLabel = es.home.scheduleStreakZero;
+    streakColor = 'text-muted-foreground';
+  }
+
   return (
     <Link
-      to={to}
-      className="group flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
+      to="/panel"
+      className="group block rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
     >
-      <Icon className="h-6 w-6 shrink-0 text-amber-500" />
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className="text-lg font-semibold">{value}</p>
+      <div className="p-5 pb-3">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {es.home.scheduleStreak}
+        </p>
+
+        <div className="mt-3 flex items-center gap-4">
+          <div
+            className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+              isActive
+                ? 'bg-gradient-to-br from-orange-400 to-red-500 shadow-md drop-shadow-[0_0_10px_rgba(251,146,60,0.45)]'
+                : 'bg-muted'
+            }`}
+          >
+            <Star
+              className={`h-7 w-7 ${isActive ? 'text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.5)]' : 'text-muted-foreground/40'}`}
+              strokeWidth={2.5}
+            />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <p className={`text-base font-semibold ${streakColor}`}>
+              {streakLabel}
+            </p>
+            {!todayPassed && displayStreak > 0 && (
+              <p className="mt-0.5 text-xs text-amber-600">{es.home.scheduleStreakPending}</p>
+            )}
+            {isActive && todayPct === 100 && (
+              <p className="mt-0.5 text-xs font-medium text-green-600">{es.home.scheduleStreakPerfect}</p>
+            )}
+          </div>
+
+          <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" />
+        </div>
       </div>
-      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" />
+
+      <div className="border-t px-5 py-3">
+        <div className="flex items-center justify-between">
+          {weeklyByDay.map((day) => {
+            const pct = day.planned > 0 ? (day.completed / day.planned) * 100 : 0;
+            const perfect = pct === 100;
+            const passed = pct >= threshold;
+            const atThreshold = passed && pct < 100 && pct <= threshold + 5;
+            const isFuture = day.date > today;
+
+            const jsDay = new Date(day.date + 'T12:00:00').getDay();
+            const dayKey = DAY_KEYS_BY_JS[jsDay];
+            const label = es.schedule.days[dayKey as keyof typeof es.schedule.days];
+
+            return (
+              <div key={day.date} className="flex flex-col items-center gap-1">
+                <span className={`text-[10px] font-medium ${day.date === today ? '' : 'text-muted-foreground'}`}>
+                  {label}
+                </span>
+                <div
+                  className={`h-3.5 w-3.5 rounded-full transition-colors ${
+                    isFuture
+                      ? 'bg-muted'
+                      : perfect
+                        ? 'bg-green-500 shadow-sm shadow-green-200'
+                        : atThreshold
+                          ? 'bg-amber-400 shadow-sm shadow-amber-200/50'
+                          : passed
+                            ? 'bg-amber-500 shadow-sm shadow-amber-200'
+                            : day.planned > 0
+                              ? 'bg-muted-foreground/30'
+                              : 'bg-muted'
+                  }`}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+interface StreakEntry {
+  habit: { id: string; title: string };
+  streak: StreakPreview | null;
+  recentlyFailed: boolean;
+}
+
+function HabitsStreakCard({ streaks }: { streaks: StreakEntry[] }) {
+  const displayedStreaks = streaks.filter((s) => {
+    const status = s.streak?.streak.status;
+    const day = s.streak?.streak.currentDay ?? 0;
+    return (status === 'active' || status === 'completed') && day >= 1;
+  });
+
+  const restartableCount = streaks.filter((s) => s.recentlyFailed).length;
+
+  const doneCount = displayedStreaks.filter(
+    (s) => !!s.streak?.todayLog || s.streak?.streak.status === 'completed'
+  ).length;
+  const totalCount = displayedStreaks.length;
+
+  let bestEntry: StreakEntry | null = null;
+  let bestDay = 0;
+  for (const s of displayedStreaks) {
+    const day = s.streak?.streak.currentDay ?? 0;
+    if (day > bestDay) {
+      bestDay = day;
+      bestEntry = s;
+    }
+  }
+
+  const bestTitle = bestEntry?.habit.title ?? '';
+  const bestCompleted = bestEntry?.streak?.streak.status === 'completed';
+  const bestIsDone = !!bestEntry?.streak?.todayLog || bestCompleted;
+  const isActive = bestDay > 0;
+
+  let message = '';
+  if (totalCount === 0) {
+    message = restartableCount > 0
+      ? es.home.habitsRestartAvailable.replace('{count}', String(restartableCount))
+      : es.home.habitsNoneActive;
+  } else if (doneCount === totalCount) {
+    message = es.home.habitsAllActive;
+  } else {
+    message = es.home.habitsSomeDone
+      .replace('{done}', String(doneCount))
+      .replace('{total}', String(totalCount));
+  }
+
+  if (restartableCount > 0 && totalCount > 0) {
+    message += ' ' + es.home.habitsRestartAvailable.replace('{count}', String(restartableCount));
+  }
+
+  return (
+    <Link
+      to="/habits"
+      className="group block rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
+    >
+      <div className="p-5 pb-3">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {es.home.habitsStreak}
+        </p>
+
+        <div className="mt-3 flex items-center gap-4">
+          <div
+            className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+              isActive && bestIsDone
+                ? 'bg-gradient-to-br from-orange-400 to-red-500 shadow-md drop-shadow-[0_0_10px_rgba(251,146,60,0.45)]'
+                : 'bg-muted'
+            }`}
+          >
+            {bestCompleted ? (
+              <Crown className="h-7 w-7 text-amber-200 drop-shadow-[0_0_4px_rgba(255,255,255,0.5)]" strokeWidth={2.5} />
+            ) : (
+              <Flame
+                className={`h-7 w-7 ${
+                  isActive && bestIsDone
+                    ? 'text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.5)]'
+                    : 'text-muted-foreground/40'
+                }`}
+                strokeWidth={2.5}
+              />
+            )}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            {isActive ? (
+              <>
+                <p className="truncate text-base font-semibold">{bestTitle}</p>
+                <p className="mt-0.5 text-sm font-medium text-orange-600">
+                  {es.streak.dayOf.replace('{current}', String(bestDay))}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-base font-semibold text-muted-foreground">{es.home.habitsStreakZero}</p>
+                <p className="mt-0.5 text-sm text-muted-foreground">{es.home.habitsStreakBest}</p>
+              </>
+            )}
+          </div>
+
+          <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" />
+        </div>
+      </div>
+
+      {totalCount > 0 && (
+        <div className="border-t px-5 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              {displayedStreaks
+                .filter((s) => s.habit.id !== bestEntry!.habit.id)
+                .map((s) => {
+                  const isDone = !!s.streak?.todayLog || s.streak?.streak.status === 'completed';
+                  return (
+                    <Flame
+                      key={s.habit.id}
+                      className={`h-4 w-4 transition-colors ${
+                        isDone
+                          ? 'text-orange-500 drop-shadow-[0_0_4px_rgba(251,146,60,0.5)]'
+                          : 'text-muted-foreground/30'
+                      }`}
+                      strokeWidth={2.5}
+                    />
+                  );
+                })}
+            </div>
+            {message && (
+              <p className="ml-3 text-[10px] leading-tight text-muted-foreground">{message}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {totalCount === 0 && restartableCount > 0 && (
+        <div className="border-t px-5 py-3">
+          <p className="text-[10px] leading-tight text-muted-foreground">{message}</p>
+        </div>
+      )}
     </Link>
   );
 }
@@ -114,7 +348,8 @@ export default function Home() {
   const [activities, setActivities] = useState<ActivityWithLog[]>([]);
   const [daily, setDaily] = useState<CategoryBreakdown[]>([]);
   const [scheduleStreak, setScheduleStreak] = useState<ScheduleStreak | null>(null);
-  const [habitsStreak, setHabitsStreak] = useState<{ maxDay: number; habitTitle: string } | null>(null);
+  const [weeklyByDay, setWeeklyByDay] = useState<DayTotal[]>([]);
+  const [habitsStreaks, setHabitsStreaks] = useState<StreakEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -126,23 +361,14 @@ export default function Home() {
       api.get<ActivityWithLog[]>('/tasks', { params: { date: today } }),
       api.get<AnalyticsResponse>('/analytics', { params: { date: today } }),
       api.get<ScheduleStreak>('/analytics/schedule-streak'),
-      api.get<{ habit: { id: string; title: string }; streak: StreakPreview | null }[]>('/streaks'),
+      api.get<{ streaks: StreakEntry[]; brokenStreaks: string[] }>('/streaks'),
     ])
       .then(([tasksRes, analyticsRes, streakRes, habitsRes]) => {
         setActivities(tasksRes.data);
         setDaily(analyticsRes.data.daily);
         setScheduleStreak(streakRes.data);
-
-        const activeHabits = habitsRes.data.filter((h) => h.streak?.streak.status === 'active');
-        if (activeHabits.length > 0) {
-          const best = activeHabits.reduce((a, b) =>
-            (a.streak?.streak.currentDay ?? 0) > (b.streak?.streak.currentDay ?? 0) ? a : b
-          );
-          setHabitsStreak({
-            maxDay: best.streak?.streak.currentDay ?? 0,
-            habitTitle: best.habit.title,
-          });
-        }
+        setWeeklyByDay(analyticsRes.data.weeklyByDay);
+        setHabitsStreaks(habitsRes.data.streaks);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -151,51 +377,24 @@ export default function Home() {
     return <p className="text-muted-foreground">{es.common.loading}</p>;
   }
 
-  const scheduleStreakValue = scheduleStreak && scheduleStreak.streak > 0
-    ? es.home.scheduleStreakDays.replace('{count}', String(scheduleStreak.streak))
-    : es.home.scheduleStreakZero;
-
-  const habitsStreakValue = habitsStreak && habitsStreak.maxDay > 0
-    ? es.home.habitsStreakDays.replace('{day}', String(habitsStreak.maxDay))
-    : es.home.habitsStreakZero;
-
   return (
     <div className="space-y-6 page-fade-in">
       <NextActivityCard activities={activities} />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <StreakCard
-          to="/panel"
-          icon={Star}
-          label={es.home.scheduleStreak}
-          value={scheduleStreakValue}
-          subtitle=""
+        <ScheduleStreakCard
+          streak={scheduleStreak?.streak ?? 0}
+          pendingStreak={scheduleStreak?.pendingStreak ?? 0}
+          weeklyByDay={weeklyByDay}
         />
-        <StreakCard
-          to="/habits"
-          icon={Flame}
-          label={es.home.habitsStreak}
-          value={habitsStreakValue}
-          subtitle=""
-        />
+        <HabitsStreakCard streaks={habitsStreaks} />
       </div>
 
       <div>
         <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
           {es.home.dailyAnalysis}
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <CategoryChart
-            data={daily}
-            title={es.home.planVsReal}
-            compact
-          />
-          <BalancePieChart
-            data={daily}
-            title={es.home.distribution}
-            compact
-          />
-        </div>
+        <CategoryProgressBars data={daily} />
       </div>
     </div>
   );

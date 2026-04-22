@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api';
 import { es } from '@/i18n/es';
 import { ComplianceBar } from '@/components/streaks/ComplianceBar';
 import { BookOpen, Heart, Coffee, Gamepad2 } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import { formatClockTime } from '@/lib/format';
+import confetti from 'canvas-confetti';
 import type { ActivityWithLog } from '@shared/types/schedule';
 import type { Category } from '@shared/types/enums';
 
@@ -72,6 +73,29 @@ export default function DailyChecklist() {
   const total = activities.length;
   const completed = activities.filter((a) => a.log?.done).length;
   const pct = total > 0 ? (completed / total) * 100 : 0;
+  const allDone = total > 0 && completed === total;
+  const [celebrated100, setCelebrated100] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (allDone && !celebrated100 && settings.celebrationsEnabled) {
+      setCelebrated100(true);
+      const rect = listRef.current?.getBoundingClientRect();
+      const x = rect ? (rect.left + rect.width / 2) / window.innerWidth : 0.5;
+      const y = rect ? (rect.top + rect.height / 2) / window.innerHeight : 0.5;
+      confetti({
+        particleCount: 100,
+        spread: 80,
+        origin: { x, y },
+        colors: ['#22c55e', '#16a34a', '#fbbf24', '#3b82f6', '#a855f7'],
+      });
+      setTimeout(() => {
+        confetti({ particleCount: 50, angle: 60, spread: 60, origin: { x: 0, y: 0.7 } });
+        confetti({ particleCount: 50, angle: 120, spread: 60, origin: { x: 1, y: 0.7 } });
+      }, 300);
+    }
+    if (!allDone) setCelebrated100(false);
+  }, [allDone, celebrated100, settings.celebrationsEnabled]);
 
   if (loading) {
     return (
@@ -96,18 +120,18 @@ export default function DailyChecklist() {
       </div>
 
       {total > 0 && (
-        <div className="rounded-xl border bg-white p-4 shadow-sm">
+        <div className="rounded-xl border bg-card p-4 shadow-sm">
           <ComplianceBar compliancePct={pct} passed={pct >= settings.successThreshold} />
         </div>
       )}
 
       {activities.length === 0 ? (
-        <div className="rounded-xl border bg-white p-8 text-center text-muted-foreground shadow-sm">
+        <div className="rounded-xl border bg-card p-8 text-center text-muted-foreground shadow-sm">
           {es.checklist.noTasks}
         </div>
       ) : (
-        <div className="relative ml-3">
-          <div className="absolute left-0 top-3 bottom-3 w-px bg-gray-200" />
+        <div ref={listRef} className="relative ml-3">
+          <div className="absolute left-0 top-3 bottom-3 w-px bg-border" />
           <div className="space-y-2">
             {activities.map((a) => {
               const isDone = a.log?.done ?? false;
@@ -118,18 +142,18 @@ export default function DailyChecklist() {
                     <div className={`h-3.5 w-3.5 rounded-full border-2 border-white shadow-sm ${CATEGORY_DOT[a.category]}`} />
                   </div>
 
-                  <div className={`ml-3 flex flex-1 items-center gap-3 rounded-xl border bg-white py-3 pr-4 pl-4 shadow-sm transition-all ${isDone ? 'opacity-60' : ''}`}>
+                  <div className={`ml-3 flex flex-1 items-center gap-3 rounded-xl border bg-card py-3 pr-4 pl-4 shadow-sm transition-all ${isDone ? 'opacity-60' : ''}`}>
                     <input
                       type="checkbox"
                       checked={isDone}
                       onChange={() => toggleDone(a.id)}
                       className="h-5 w-5 shrink-0 rounded border-gray-300 accent-primary cursor-pointer"
                     />
-                    <span className={`shrink-0 whitespace-nowrap text-sm font-mono ${isDone ? 'text-gray-300' : 'text-muted-foreground'}`}>
+                    <span className={`shrink-0 whitespace-nowrap text-sm font-mono ${isDone ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}>
                       {formatClockTime(a.time, settings.timeFormat)}{a.endTime ? `–${formatClockTime(a.endTime, settings.timeFormat)}` : ''}
                     </span>
                     <Icon className={`h-4 w-4 shrink-0 ${CATEGORY_ICON_COLOR[a.category]}`} strokeWidth={1.5} />
-                    <span className={`flex-1 text-sm font-medium ${isDone ? 'text-gray-300' : 'text-[#1e293b]'}`}>
+                    <span className={`flex-1 text-sm font-medium ${isDone ? 'text-muted-foreground/40' : ''}`}>
                       {a.activity}
                     </span>
                   </div>

@@ -5,6 +5,38 @@ import type { StreakPreview } from '@shared/types/streak';
 import { es } from '@/i18n/es';
 import { useSettings } from '@/hooks/useSettings';
 
+const MILESTONES = new Set([7, 14, 21]);
+
+function isMilestone(day: number): boolean {
+  return MILESTONES.has(day);
+}
+
+function fireCelebration(ref: React.RefObject<HTMLButtonElement | null>) {
+  const rect = ref.current?.getBoundingClientRect();
+  const x = rect ? (rect.left + rect.width / 2) / window.innerWidth : 0.5;
+  const y = rect ? (rect.top + rect.height / 2) / window.innerHeight : 0.5;
+  confetti({
+    particleCount: 80,
+    spread: 70,
+    origin: { x, y },
+    colors: ['#fbbf24', '#f59e0b', '#ef4444', '#3b82f6', '#22c55e'],
+  });
+  setTimeout(() => {
+    confetti({
+      particleCount: 40,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0, y: 0.7 },
+    });
+    confetti({
+      particleCount: 40,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1, y: 0.7 },
+    });
+  }, 250);
+}
+
 interface StreakWidgetProps {
   streakPreview: StreakPreview;
   onLogToday: () => void;
@@ -19,37 +51,17 @@ export function StreakWidget({ streakPreview, onLogToday }: StreakWidgetProps) {
   const isCompleted = streak.status === 'completed';
   const [showSparks, setShowSparks] = useState(false);
   const [igniting, setIgniting] = useState(false);
-  const [celebrated, setCelebrated] = useState(false);
+  const [celebratedDays, setCelebratedDays] = useState<Set<number>>(new Set());
   const btnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (isCompleted && !celebrated && settings.celebrationsEnabled) {
-      setCelebrated(true);
-      const rect = btnRef.current?.getBoundingClientRect();
-      const x = rect ? (rect.left + rect.width / 2) / window.innerWidth : 0.5;
-      const y = rect ? (rect.top + rect.height / 2) / window.innerHeight : 0.5;
-      confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { x, y },
-        colors: ['#fbbf24', '#f59e0b', '#ef4444', '#3b82f6', '#22c55e'],
-      });
-      setTimeout(() => {
-        confetti({
-          particleCount: 40,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0, y: 0.7 },
-        });
-        confetti({
-          particleCount: 40,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1, y: 0.7 },
-        });
-      }, 250);
+    if (!settings.celebrationsEnabled) return;
+    const day = streak.currentDay;
+    if (isMilestone(day) && isActive && !celebratedDays.has(day)) {
+      setCelebratedDays((prev) => new Set(prev).add(day));
+      fireCelebration(btnRef);
     }
-  }, [isCompleted, celebrated]);
+  }, [streak.currentDay, isActive, celebratedDays, settings.celebrationsEnabled]);
 
   const barColor = isCompleted
     ? 'bg-green-500'
@@ -90,8 +102,8 @@ export function StreakWidget({ streakPreview, onLogToday }: StreakWidgetProps) {
             isActive
               ? 'bg-gradient-to-br from-orange-400 to-red-500 shadow-md fire-glow drop-shadow-[0_0_10px_rgba(251,146,60,0.45)]'
               : canLogToday
-                ? 'cursor-pointer bg-gray-100 drop-shadow-[0_0_6px_rgba(0,0,0,0.06)] hover:bg-amber-50 hover:shadow-[0_0_18px_rgba(251,146,60,0.35)]'
-                : 'bg-gray-100'
+                ? 'cursor-pointer bg-muted drop-shadow-[0_0_6px_rgba(0,0,0,0.06)] hover:bg-amber-500/10 hover:shadow-[0_0_18px_rgba(251,146,60,0.35)]'
+                : 'bg-muted'
           } ${igniting ? 'fire-ignite' : ''}`}
         >
           <Flame
@@ -99,8 +111,8 @@ export function StreakWidget({ streakPreview, onLogToday }: StreakWidgetProps) {
               isActive
                 ? 'text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.5)]'
                 : canLogToday
-                  ? 'text-gray-300 group-hover/fire:text-amber-500'
-                  : 'text-gray-300'
+                  ? 'text-muted-foreground/40 group-hover/fire:text-amber-500'
+                  : 'text-muted-foreground/40'
             }`}
             strokeWidth={2.5}
           />
@@ -113,7 +125,7 @@ export function StreakWidget({ streakPreview, onLogToday }: StreakWidgetProps) {
           )}
         </button>
         {canLogToday && (
-          <span className="text-[10px] text-gray-500">{es.streak.lightUp}</span>
+          <span className="text-[10px] text-muted-foreground">{es.streak.lightUp}</span>
         )}
         {isActive && !isCompleted && (
           <span className="text-[10px] font-medium text-orange-500">{es.streak.lit}</span>
@@ -124,13 +136,13 @@ export function StreakWidget({ streakPreview, onLogToday }: StreakWidgetProps) {
       </div>
 
       <div className="flex w-full items-center gap-1 pb-3 pt-2">
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-200/70">
+        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
           <div
             className={`h-full rounded-full transition-all duration-500 ${barColor}`}
             style={{ width: `${progress}%` }}
           />
         </div>
-        <Trophy className={`h-3 w-3 shrink-0 ${isCompleted ? 'text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.6)]' : 'text-gray-300 opacity-50'}`} />
+        <Trophy className={`h-3 w-3 shrink-0 ${isCompleted ? 'text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.6)]' : 'text-muted-foreground/30 opacity-50'}`} />
       </div>
     </div>
   );
