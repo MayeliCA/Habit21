@@ -1,7 +1,7 @@
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { db } from '../../db';
 import { scheduleActivities, scheduleActivityLogs } from '../../db/schema';
-import type { CategoryBreakdown, AnalyticsResponse, SuccessMetric, DayCompliance, DayTotal, WeekTotal, ScheduleStreak } from '@shared/types/analytics';
+import type { CategoryBreakdown, AnalyticsResponse, SuccessMetric, DayCompliance, DayTotal, WeekTotal, ScheduleStreak, DayActivityDetail, WeekComparison, WeekPeriodStats, MonthlyDotsResponse } from '@shared/types/analytics';
 import type { Category } from '@shared/types/enums';
 
 const ALL_CATEGORIES: Category[] = ['academic', 'vital', 'personal', 'escape'];
@@ -427,4 +427,172 @@ export async function getAnalytics(userId: string, dateStr: string): Promise<Ana
   const successMetric = computeSuccessMetric(activities, allLogs, dateStr);
 
   return { daily, weekly, monthly, weeklyByDay, monthlyByWeek, successMetric };
+}
+
+export async function getMonthlyDots(userId: string, month?: string): Promise<MonthlyDotsResponse> {
+  const activities = await db.query.scheduleActivities.findMany({
+    where: eq(scheduleActivities.userId, userId),
+    columns: { id: true, category: true, time: true, endTime: true, daysOfWeek: true },
+  }) as ActivityWithCategory[];
+
+  const firstLogRow = await db.query.scheduleActivityLogs.findFirst({
+    where: eq(scheduleActivityLogs.userId, userId),
+    columns: { date: true },
+    orderBy: (l, { asc }) => [asc(l.date)],
+  });
+  const firstLogDate = firstLogRow?.date ?? null;
+
+  if (activities.length === 0) {
+    return { days: [], firstLogDate };
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const targetMonth = month || today.slice(0, 7);
+  const [year, mon] = targetMonth.split('-').map(Number);
+  const lastDay = new Date(year, mon, 0).getDate();
+  const start = `${targetMonth}-01`;
+  const end = `${targetMonth}-${String(lastDay).padStart(2, '0')}`;
+
+  const logs = await db.query.scheduleActivityLogs.findMany({
+    where: and(
+      eq(scheduleActivityLogs.userId, userId),
+      gte(scheduleActivityLogs.date, start),
+      lte(scheduleActivityLogs.date, end),
+    ),
+    columns: { activityId: true, date: true, done: true },
+  }) as LogEntry[];
+
+  const logByDateAndActivity = new Map<string, LogEntry>();
+  for (const l of logs) {
+    logByDateAndActivity.set(`${l.date}:${l.activityId}`, l);
+  }
+
+  const result: DayCompliance[] = [];
+  let current = start;
+  while (current <= end) {
+    const jsDay = getJsDay(current);
+    const dayActivities = activities.filter((a) => a.daysOfWeek.includes(jsDay));
+
+    if (dayActivities.length > 0) {
+      const doneCount = dayActivities.filter((a) => {
+        const log = logByDateAndActivity.get(`${current}:${a.id}`);
+        return log?.done === true;
+      }).length;
+      const pct = (doneCount / dayActivities.length) * 100;
+      result.push({ date: current, pct: Number(pct.toFixed(2)), passed: pct >= 80 });
+    } else {
+      result.push({ date: current, pct: 0, passed: false });
+    }
+
+    const d = new Date(current + 'T12:00:00');
+    d.setDate(d.getDate() + 1);
+    current = d.toISOString().slice(0, 10);
+  }
+
+  return { days: result, firstLogDate };
+}
+
+export async function getDayDetail(userId: string, dateStr: string): Promise<DayActivityDetail[]> {
+  const jsDay = getJsDay(dateStr);
+
+  const activities = await db.query.scheduleActivities.findMany({
+    where: eq(scheduleActivities.userId, userId),
+    columns: { id: true, category: true, time: true, endTime: true, daysOfWeek: true, activity: true, sortOrder: true },
+    orderBy: (a, { asc }) => [asc(a.sortOrder), asc(a.time)],
+  });
+
+  const dayActivities = activities.filter((a) => a.daysOfWeek.includes(jsDay));
+
+  const logs = await db.query.scheduleActivityLogs.findMany({
+    where: and(eq(scheduleActivityLogs.userId, userId), eq(scheduleActivityLogs.date, dateStr)),
+    columns: { activityId: true, done: true },
+  });
+
+  const logMap = new Map(logs.map((l) => [l.activityId, l.done]));
+
+  return dayActivities.map((a) => ({
+    id: a.id,
+    activity: a.activity,
+    time: a.time,
+    endTime: a.endTime,
+    category: a.category,
+    done: logMap.get(a.id) ?? false,
+  }));
+}
+
+function computeWeekPeriod(
+  activities: ActivityWithCategory[],
+  logByDateAndActivity: Map<string, LogEntry>,
+  start: string,
+  end: string,
+  threshold: number,
+): WeekPeriodStats {
+  const dayPcts: number[] = [];
+  let daysPassed = 0;
+  let daysTotal = 0;
+
+  let current = start;
+  while (current <= end) {
+    const jsDay = getJsDay(current);
+    const dayActivities = activities.filter((a) => a.daysOfWeek.includes(jsDay));
+
+    if (dayActivities.length > 0) {
+      daysTotal++;
+      const doneCount = dayActivities.filter((a) => {
+        const log = logByDateAndActivity.get(`${current}:${a.id}`);
+        return log?.done === true;
+      }).length;
+      const pct = (doneCount / dayActivities.length) * 100;
+      dayPcts.push(pct);
+      if (pct >= threshold) daysPassed++;
+    }
+
+    current = addDays(current, 1);
+  }
+
+  const avgPct = dayPcts.length > 0
+    ? Number((dayPcts.reduce((s, p) => s + p, 0) / dayPcts.length).toFixed(1))
+    : 0;
+
+  return { avgPct, daysPassed, daysTotal };
+}
+
+export async function getWeekComparison(userId: string, today: string): Promise<WeekComparison> {
+  const activities = await db.query.scheduleActivities.findMany({
+    where: eq(scheduleActivities.userId, userId),
+    columns: { id: true, category: true, time: true, endTime: true, daysOfWeek: true },
+  }) as ActivityWithCategory[];
+
+  if (activities.length === 0) {
+    return {
+      thisWeek: { avgPct: 0, daysPassed: 0, daysTotal: 0 },
+      lastWeek: { avgPct: 0, daysPassed: 0, daysTotal: 0 },
+    };
+  }
+
+  const todayJsDay = getJsDay(today);
+  const mondayOffset = todayJsDay === 0 ? -6 : 1 - todayJsDay;
+  const thisMonday = addDays(today, mondayOffset);
+  const lastMonday = subtractDays(thisMonday, 7);
+  const lastSunday = subtractDays(thisMonday, 1);
+
+  const earliest = lastMonday;
+  const logs = await db.query.scheduleActivityLogs.findMany({
+    where: and(
+      eq(scheduleActivityLogs.userId, userId),
+      gte(scheduleActivityLogs.date, earliest),
+      lte(scheduleActivityLogs.date, today),
+    ),
+    columns: { activityId: true, date: true, done: true },
+  }) as LogEntry[];
+
+  const logByDateAndActivity = new Map<string, LogEntry>();
+  for (const l of logs) {
+    logByDateAndActivity.set(`${l.date}:${l.activityId}`, l);
+  }
+
+  return {
+    thisWeek: computeWeekPeriod(activities, logByDateAndActivity, thisMonday, today, 80),
+    lastWeek: computeWeekPeriod(activities, logByDateAndActivity, lastMonday, lastSunday, 80),
+  };
 }

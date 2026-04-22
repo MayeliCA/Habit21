@@ -38,4 +38,8 @@ export type {
   DayCompliance,
   DayTotal,
   WeekTotal,
+  DayActivityDetail,
+  WeekComparison,
+  WeekPeriodStats,
+  MonthlyDotsResponse,
 } from './types/analytics';

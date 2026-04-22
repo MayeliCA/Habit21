@@ -1,142 +1,146 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api';
 import { es } from '@/i18n/es';
-import { formatTime } from '@/lib/format';
-import { SuccessMetricCard } from '@/components/dashboard/SuccessMetricCard';
-import { CollapsibleSection } from '@/components/dashboard/CollapsibleSection';
-import { BalancePieChart } from '@/components/dashboard/BalancePieChart';
-import { CategoryChart } from '@/components/dashboard/CategoryChart';
-import { TimelineBarChart } from '@/components/dashboard/TimelineBarChart';
-import { ExecutiveSummary } from '@/components/dashboard/ExecutiveSummary';
-import type { AnalyticsResponse, CategoryBreakdown } from '@shared/types/analytics';
-
-function getBalanceInsight(data: CategoryBreakdown[]): string {
-  const withData = data.filter((d) => d.plannedMinutes > 0);
-  if (withData.length === 0) return es.dashboard.noData;
-  const top = withData.reduce((a, b) => (a.plannedMinutes > b.plannedMinutes ? a : b));
-  const total = withData.reduce((s, d) => s + d.plannedMinutes, 0);
-  const pct = ((top.plannedMinutes / total) * 100).toFixed(0);
-  const name = es.category[top.category].split('(')[0].trim();
-  return es.dashboard.insightBalanceTop
-    .replace('{top}', name)
-    .replace('{pct}', pct)
-    + ` (${formatTime(top.plannedMinutes)})`;
-}
-
-function getDisciplineInsight(data: CategoryBreakdown[]): string {
-  const withData = data.filter((d) => d.plannedMinutes > 0);
-  if (withData.length === 0) return es.dashboard.noData;
-  let best = withData[0];
-  let bestRate = 0;
-  for (const d of withData) {
-    const rate = (d.completedMinutes / d.plannedMinutes) * 100;
-    if (rate > bestRate) {
-      bestRate = rate;
-      best = d;
-    }
-  }
-  const name = es.category[best.category].split('(')[0].trim();
-  return es.dashboard.insightDiscipline
-    .replace('{pct}', bestRate.toFixed(0))
-    .replace('{topCategory}', name);
-}
-
-function getWeeklyInsight(data: { planned: number; completed: number }[]): string {
-  const withPlanned = data.filter((d) => d.planned > 0);
-  if (withPlanned.length === 0) return es.dashboard.noData;
-  const passed = withPlanned.filter((d) => (d.completed / d.planned) >= 0.8).length;
-  return es.dashboard.insightWeekly
-    .replace('{passed}', String(passed))
-    .replace('{total}', String(withPlanned.length));
-}
-
-function getMonthlyInsight(data: { planned: number; completed: number }[]): string {
-  const withPlanned = data.filter((d) => d.planned > 0);
-  if (withPlanned.length === 0) return es.dashboard.noData;
-  const passed = withPlanned.filter((d) => (d.completed / d.planned) >= 0.8).length;
-  return es.dashboard.insightMonthly
-    .replace('{passed}', String(passed))
-    .replace('{total}', String(withPlanned.length));
-}
+import { WeekGrid } from '@/components/dashboard/WeekGrid';
+import { DayDetail } from '@/components/dashboard/DayDetail';
+import { CategoryProgressBars } from '@/components/dashboard/CategoryProgressBars';
+import { MonthlyDotGrid } from '@/components/dashboard/MonthlyDotGrid';
+import { WeekComparison } from '@/components/dashboard/WeekComparison';
+import type { AnalyticsResponse, DayCompliance, DayActivityDetail, WeekComparison as WeekComparisonType, MonthlyDotsResponse } from '@shared/types/analytics';
 
 export default function Dashboard() {
   const [analytics, setAnalytics] = useState<AnalyticsResponse | null>(null);
+  const [monthlyDots, setMonthlyDots] = useState<DayCompliance[]>([]);
+  const [firstLogDate, setFirstLogDate] = useState<string | null>(null);
+  const [dayActivities, setDayActivities] = useState<DayActivityDetail[]>([]);
+  const [weekComp, setWeekComp] = useState<WeekComparisonType | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [dayLoading, setDayLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentMonth, setCurrentMonth] = useState(() => new Date().toISOString().slice(0, 7));
 
   const today = new Date().toISOString().slice(0, 10);
 
+  const fetchMonthDots = useCallback((month: string) => {
+    api.get<MonthlyDotsResponse>('/analytics/monthly-dots', { params: { month } })
+      .then((res) => {
+        setMonthlyDots(res.data.days);
+        setFirstLogDate(res.data.firstLogDate);
+      });
+  }, []);
+
   useEffect(() => {
-    api
-      .get<AnalyticsResponse>('/analytics', { params: { date: today } })
-      .then((res) => setAnalytics(res.data))
+    Promise.all([
+      api.get<AnalyticsResponse>('/analytics', { params: { date: today } }),
+      api.get<MonthlyDotsResponse>('/analytics/monthly-dots'),
+      api.get<WeekComparisonType>('/analytics/week-comparison'),
+    ])
+      .then(([analyticsRes, dotsRes, compRes]) => {
+        setAnalytics(analyticsRes.data);
+        setMonthlyDots(dotsRes.data.days);
+        setFirstLogDate(dotsRes.data.firstLogDate);
+        setWeekComp(compRes.data);
+        setSelectedDate(today);
+      })
       .finally(() => setLoading(false));
   }, [today]);
 
+  useEffect(() => {
+    if (!selectedDate) return;
+    setDayLoading(true);
+    api
+      .get<DayActivityDetail[]>('/analytics/day-detail', { params: { date: selectedDate } })
+      .then((res) => setDayActivities(res.data))
+      .finally(() => setDayLoading(false));
+  }, [selectedDate]);
+
+  const handleMonthChange = useCallback((month: string) => {
+    setCurrentMonth(month);
+    fetchMonthDots(month);
+  }, [fetchMonthDots]);
+
   if (loading) {
     return (
-      <div className="space-y-6 page-fade-in">
-        <h1 className="text-2xl font-bold">{es.dashboard.title}</h1>
-        <p className="text-muted-foreground">{es.common.loading}</p>
+      <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
+        <p className="text-sm text-muted-foreground">{es.common.loading}</p>
       </div>
     );
   }
 
-  const d = analytics?.daily ?? [];
-  const w = analytics?.weekly ?? [];
-  const m = analytics?.monthly ?? [];
-  const weeklyByDay = (analytics?.weeklyByDay ?? []).map((d) => ({
-    label: d.dayLabel,
-    planned: d.planned,
-    completed: d.completed,
-  }));
-  const monthlyByWeek = (analytics?.monthlyByWeek ?? []).map((w) => ({
-    label: w.weekLabel,
-    planned: w.planned,
-    completed: w.completed,
-  }));
+  const weeklyByDay = analytics?.weeklyByDay ?? [];
+  const weekly = analytics?.weekly ?? [];
+  const hasWeeklyData = weekly.some((d) => d.plannedMinutes > 0);
+
+  const weekAvg = (() => {
+    const withData = weeklyByDay.filter((d) => d.planned > 0 && d.date <= today);
+    if (withData.length === 0) return null;
+    const totalPct = withData.reduce((s, d) => s + (d.completed / d.planned) * 100, 0);
+    return Math.round(totalPct / withData.length);
+  })();
+
+  const weekAvgColor = weekAvg !== null
+    ? weekAvg >= 80 ? 'bg-green-100 text-green-700' : weekAvg >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600'
+    : '';
 
   return (
-    <div className="space-y-6 page-fade-in">
-      <h1 className="text-2xl font-bold">{es.dashboard.title}</h1>
-
-      {analytics?.successMetric && (
-        <SuccessMetricCard metric={analytics.successMetric} />
-      )}
-
-      {analytics && <ExecutiveSummary analytics={analytics} />}
-
-      <CollapsibleSection
-        title={es.dashboard.sectionDiscipline}
-        subtitle={es.dashboard.disciplineGoal}
-        defaultOpen={true}
-      >
-        <div className="space-y-6">
-          <CategoryChart data={d} title={es.dashboard.daily} insight={getDisciplineInsight(d)} />
-          <TimelineBarChart
-            data={weeklyByDay}
-            title={es.dashboard.weekly}
-            insight={getWeeklyInsight(weeklyByDay)}
-            badgeInsight
-          />
-          <TimelineBarChart
-            data={monthlyByWeek}
-            title={es.dashboard.monthly}
-            insight={getMonthlyInsight(monthlyByWeek)}
-          />
+    <div className="flex h-[calc(100vh-8rem)] flex-col gap-3 page-fade-in">
+      <section>
+        <div className="mb-2 flex items-center gap-3">
+          <h2 className="text-sm font-semibold text-muted-foreground">
+            {es.dashboard.weekTitle}
+          </h2>
+          {weekAvg !== null && (
+            <span className={`rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ${weekAvgColor}`}>
+              {es.dashboard.weekSummary.replace('{pct}', String(weekAvg))}
+            </span>
+          )}
         </div>
-      </CollapsibleSection>
+        <WeekGrid
+          data={weeklyByDay}
+          today={today}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
+      </section>
 
-      <CollapsibleSection
-        title={es.dashboard.sectionBalance}
-        subtitle={es.dashboard.balanceGoal}
-        defaultOpen={false}
-      >
-        <div className="grid gap-6 lg:grid-cols-3">
-          <BalancePieChart data={d} title={es.dashboard.daily} insight={getBalanceInsight(d)} />
-          <BalancePieChart data={w} title={es.dashboard.weekly} insight={getBalanceInsight(w)} />
-          <BalancePieChart data={m} title={es.dashboard.monthly} insight={getBalanceInsight(m)} />
+      <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-3">
+        <section className="min-h-0">
+          <DayDetail
+            activities={dayActivities}
+            loading={dayLoading}
+            date={selectedDate ?? today}
+          />
+        </section>
+
+        {hasWeeklyData && (
+          <section className="flex min-h-0 flex-col">
+            <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
+              {es.dashboard.weekBalance}
+            </h2>
+            <CategoryProgressBars data={weekly} compact />
+          </section>
+        )}
+
+        <div className="flex min-h-0 flex-col gap-3">
+          {weekComp && (weekComp.thisWeek.daysTotal > 0 || weekComp.lastWeek.daysTotal > 0) && (
+            <section>
+              <WeekComparison data={weekComp} />
+            </section>
+          )}
+
+          {monthlyDots.length > 0 && (
+            <section className="min-h-0 flex-1">
+              <MonthlyDotGrid
+                data={monthlyDots}
+                today={today}
+                currentMonth={currentMonth}
+                firstLogDate={firstLogDate}
+                onMonthChange={handleMonthChange}
+              />
+            </section>
+          )}
         </div>
-      </CollapsibleSection>
+      </div>
     </div>
   );
 }

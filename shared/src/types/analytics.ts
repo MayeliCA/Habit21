@@ -52,3 +52,28 @@ export interface ScheduleStreak {
   pendingStreak: number;
   startDate: string | null;
 }
+
+export interface DayActivityDetail {
+  id: string;
+  activity: string;
+  time: string;
+  endTime: string;
+  category: Category;
+  done: boolean;
+}
+
+export interface WeekPeriodStats {
+  avgPct: number;
+  daysPassed: number;
+  daysTotal: number;
+}
+
+export interface WeekComparison {
+  thisWeek: WeekPeriodStats;
+  lastWeek: WeekPeriodStats;
+}
+
+export interface MonthlyDotsResponse {
+  days: DayCompliance[];
+  firstLogDate: string | null;
+}

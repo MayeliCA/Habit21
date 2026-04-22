@@ -103,23 +103,9 @@ function ScheduleStreakCard({
   const todayPct = todayEntry && todayEntry.planned > 0
     ? (todayEntry.completed / todayEntry.planned) * 100
     : 0;
-  const todayPassed = todayPct >= threshold;
 
-  const isActive = todayPassed && streak > 0;
-  const displayStreak = streak > 0 ? streak : pendingStreak;
-
-  let streakLabel = '';
-  let streakColor = '';
-  if (isActive) {
-    streakLabel = es.home.scheduleStreakDays.replace('{count}', String(streak));
-    streakColor = '';
-  } else if (displayStreak > 0) {
-    streakLabel = es.home.scheduleStreakDays.replace('{count}', String(displayStreak));
-    streakColor = 'text-muted-foreground';
-  } else {
-    streakLabel = es.home.scheduleStreakZero;
-    streakColor = 'text-muted-foreground';
-  }
+  const isActive = streak > 0;
+  const hasPending = streak === 0 && pendingStreak > 0;
 
   return (
     <Link
@@ -146,14 +132,24 @@ function ScheduleStreakCard({
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className={`text-base font-semibold ${streakColor}`}>
-              {streakLabel}
-            </p>
-            {!todayPassed && displayStreak > 0 && (
-              <p className="mt-0.5 text-xs text-amber-600">{es.home.scheduleStreakPending}</p>
+            {isActive ? (
+              <p className="text-base font-semibold">
+                {es.home.scheduleStreakDays.replace('{count}', String(streak))}
+              </p>
+            ) : hasPending ? (
+              <p className="text-base font-semibold text-muted-foreground">
+                {es.home.scheduleStreakDays.replace('{count}', String(pendingStreak))}
+              </p>
+            ) : (
+              <p className="text-base font-semibold text-muted-foreground">
+                {es.home.scheduleStreakZero}
+              </p>
             )}
             {isActive && todayPct === 100 && (
               <p className="mt-0.5 text-xs font-medium text-green-600">{es.home.scheduleStreakPerfect}</p>
+            )}
+            {hasPending && (
+              <p className="mt-0.5 text-xs text-amber-600">{es.home.scheduleStreakPending}</p>
             )}
           </div>
 
