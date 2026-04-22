@@ -20,6 +20,8 @@ export type {
   Streak,
   HabitLog,
   StreakPreview,
+  StreakAttempt,
+  StreakHistory,
 } from './types/streak';
 
 export type {

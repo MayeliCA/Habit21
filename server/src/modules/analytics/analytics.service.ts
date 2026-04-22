@@ -312,7 +312,7 @@ export async function getScheduleStreak(userId: string, today: string): Promise<
   }) as ActivityWithCategory[];
 
   if (activities.length === 0) {
-    return { streak: 0, startDate: null };
+    return { streak: 0, pendingStreak: 0, startDate: null };
   }
 
   const allLogs = await db.query.scheduleActivityLogs.findMany({
@@ -370,7 +370,30 @@ export async function getScheduleStreak(userId: string, today: string): Promise<
     }
   }
 
-  return { streak, startDate };
+  let pendingStreak = 0;
+  if (streak === 0) {
+    const yesterday = subtractDays(today, 1);
+    let pd = yesterday;
+    while (true) {
+      const info = dayCompliances.get(pd);
+      const jsDay = getJsDay(pd);
+      const hasActivities = activities.some((a) => a.daysOfWeek.includes(jsDay));
+
+      if (hasActivities) {
+        if (info && info.passed) {
+          pendingStreak++;
+          pd = subtractDays(pd, 1);
+        } else {
+          break;
+        }
+      } else {
+        if (pd <= firstLogDate) break;
+        pd = subtractDays(pd, 1);
+      }
+    }
+  }
+
+  return { streak, pendingStreak, startDate };
 }
 
 export async function getAnalytics(userId: string, dateStr: string): Promise<AnalyticsResponse> {

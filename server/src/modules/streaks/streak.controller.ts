@@ -62,3 +62,12 @@ export async function logToday(req: Request<{ id: string }>, res: Response) {
 
   return res.json(result);
 }
+
+export async function getHistory(req: Request<{ habitId: string }>, res: Response) {
+  const { habitId } = req.params;
+
+  const history = await streakService.getStreakHistory(habitId, req.user!.userId);
+  if (!history) return res.status(404).json({ error: 'Habit not found' });
+
+  return res.json(history);
+}

@@ -49,5 +49,6 @@ export interface WeekTotal {
 
 export interface ScheduleStreak {
   streak: number;
+  pendingStreak: number;
   startDate: string | null;
 }

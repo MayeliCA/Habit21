@@ -7,6 +7,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', streakController.listStreaks);
+router.get('/habit/:habitId/history', streakController.getHistory);
 router.get('/:id', streakController.getStreakDetail);
 router.post('/habit/:habitId/start', streakController.startStreak);
 router.post('/:id/log', streakController.logToday);

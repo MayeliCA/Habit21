@@ -1,7 +1,7 @@
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '../../db';
 import { streaks, habitLogs, habits } from '../../db/schema';
-import type { Streak, HabitLog, StreakPreview } from '@shared/types/streak';
+import type { Streak, HabitLog, StreakPreview, StreakAttempt, StreakHistory } from '@shared/types/streak';
 
 function serializeStreak(s: any): Streak {
   return {
@@ -244,4 +244,69 @@ export async function runMidnightCron() {
   }
 
   console.log(`[Cron] Completed processing for ${today}`);
+}
+
+export async function getStreakHistory(habitId: string, userId: string): Promise<StreakHistory | null> {
+  const habit = await db.query.habits.findFirst({
+    where: and(eq(habits.id, habitId), eq(habits.userId, userId)),
+    columns: { id: true, title: true },
+  });
+  if (!habit) return null;
+
+  const allStreaks = await db.query.streaks.findMany({
+    where: eq(streaks.habitId, habitId),
+    orderBy: (s, { asc }) => [asc(s.createdAt)],
+  });
+
+  if (allStreaks.length === 0) {
+    return {
+      habitId,
+      habitTitle: habit.title,
+      totalAttempts: 0,
+      bestStreak: 0,
+      completedCount: 0,
+      recoveryRate: 0,
+      avgDaysBeforeFail: 0,
+      typicalFailDay: 0,
+      attempts: [],
+    };
+  }
+
+  const attempts: StreakAttempt[] = allStreaks.map((s, i) => ({
+    attemptNumber: i + 1,
+    startDate: s.startDate,
+    currentDay: s.currentDay,
+    status: s.status,
+    archivedAt: s.archivedAt ? new Date(s.archivedAt).toISOString() : null,
+    createdAt: new Date(s.createdAt).toISOString(),
+  }));
+
+  const bestStreak = Math.max(...allStreaks.map((s) => s.currentDay));
+  const completedCount = allStreaks.filter((s) => s.status === 'completed').length;
+  const failedStreaks = allStreaks.filter((s) => s.status === 'failed');
+  const totalAfterFirst = allStreaks.length > 1 ? allStreaks.length - 1 : 0;
+  const recoveryRate = totalAfterFirst > 0
+    ? Math.round((failedStreaks.length / totalAfterFirst) * 100)
+    : 0;
+
+  const avgDaysBeforeFail = failedStreaks.length > 0
+    ? Math.round(failedStreaks.reduce((sum, s) => sum + s.currentDay, 0) / failedStreaks.length)
+    : 0;
+
+  const failDays = failedStreaks.map((s) => s.currentDay);
+  const typicalFailDay = failDays.length > 0
+    ? failDays.sort((a, b) => failDays.filter((v) => v === a).length - failDays.filter((v) => v === b).length).pop()!
+    : 0;
+
+  return {
+    habitId,
+    habitTitle: habit.title,
+    totalAttempts: allStreaks.length,
+    bestStreak,
+    completedCount,
+    recoveryRate,
+    avgDaysBeforeFail,
+    typicalFailDay,
+    attempts,
+  };
 }
