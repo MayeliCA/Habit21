@@ -42,7 +42,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-white">
+      <header className="sticky top-0 z-50 w-full border-b bg-card">
         <div className="flex h-14 items-center px-6">
           <Link to="/" className="text-lg font-bold tracking-tight">{es.app.name}</Link>
 
@@ -69,34 +69,34 @@ export function Navbar() {
           <div className="ml-auto flex items-center" ref={menuRef}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-50"
+              className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-accent"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
                 {initial}
               </div>
-              <span className="text-sm font-medium text-[#1e293b]">{user?.name}</span>
+              <span className="text-sm font-medium">{user?.name}</span>
             </button>
 
             {menuOpen && (
-              <div className="dropdown-in absolute right-6 top-13 w-56 rounded-xl bg-white py-1.5 shadow-lg ring-1 ring-black/5">
+              <div className="dropdown-in absolute right-6 top-13 w-56 rounded-xl bg-card py-1.5 shadow-lg ring-1 ring-black/5">
                 <button
                   onClick={() => { setMenuOpen(false); setProfileOpen(true); }}
-                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-[#1e293b] transition-colors hover:bg-gray-50"
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-accent"
                 >
                   <User className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                   {es.nav.profile}
                 </button>
                 <button
                   onClick={() => { setMenuOpen(false); setSettingsOpen(true); }}
-                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-[#1e293b] transition-colors hover:bg-gray-50"
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-accent"
                 >
                   <Settings className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                   {es.nav.settings}
                 </button>
-                <div className="my-1.5 h-px bg-gray-100" />
+                <div className="my-1.5 h-px bg-muted" />
                 <button
                   onClick={handleLogout}
-                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-500"
                 >
                   <LogOut className="h-4 w-4" strokeWidth={1.5} />
                   {es.nav.logout}

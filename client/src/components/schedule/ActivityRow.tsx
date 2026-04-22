@@ -45,24 +45,24 @@ export function ActivityRow({ item, onDelete }: ActivityRowProps) {
     <>
       <div className="flex items-center">
         <div className="relative z-10 -ml-3 flex shrink-0 items-center justify-center">
-          <div className="h-3.5 w-3.5 rounded-full border-2 border-white bg-gray-300 shadow-sm" />
+          <div className="h-3.5 w-3.5 rounded-full border-2 border-card bg-muted-foreground/40 shadow-sm" />
           <div className={`absolute h-2 w-2 rounded-full ${colors.dot}`} />
         </div>
 
-        <div className={`ml-3 flex flex-1 items-center gap-3 rounded-xl border border-l-[3px] bg-white py-3 pr-4 pl-4 shadow-sm transition-shadow hover:shadow-md ${colors.border}`}>
+        <div className={`ml-3 flex flex-1 items-center gap-3 rounded-xl border border-l-[3px] bg-card py-3 pr-4 pl-4 shadow-sm transition-shadow hover:shadow-md ${colors.border}`}>
           <span className="shrink-0 whitespace-nowrap text-sm font-mono text-muted-foreground">
             {formatClockTime(item.time, settings.timeFormat)}{item.endTime ? `–${formatClockTime(item.endTime, settings.timeFormat)}` : ''}
           </span>
 
           <Icon className={`h-4 w-4 shrink-0 ${colors.icon}`} strokeWidth={1.5} />
 
-          <span className="flex-1 text-sm font-medium text-[#1e293b]">
+          <span className="flex-1 text-sm font-medium">
             {item.activity}
           </span>
 
           <button
             onClick={() => setConfirmOpen(true)}
-            className="rounded p-1 text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500"
+            className="rounded p-1 text-muted-foreground/40 transition-colors hover:bg-red-500/10 hover:text-red-500"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -72,7 +72,7 @@ export function ActivityRow({ item, onDelete }: ActivityRowProps) {
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
               <AlertTriangle className="h-6 w-6 text-red-500" />
             </div>
             <AlertDialogTitle>{es.schedule.confirmDelete}</AlertDialogTitle>

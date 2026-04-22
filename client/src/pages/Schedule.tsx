@@ -73,12 +73,12 @@ export default function Schedule() {
             </svg>
           </div>
           <div className="max-w-sm space-y-2 text-center">
-            <h2 className="text-lg font-semibold text-[#1e293b]">{es.schedule.emptyTitle}</h2>
-            <p className="text-sm text-gray-400">{es.schedule.emptySubtitle}</p>
+            <h2 className="text-lg font-semibold">{es.schedule.emptyTitle}</h2>
+            <p className="text-sm text-muted-foreground">{es.schedule.emptySubtitle}</p>
           </div>
           <button
             onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-            className="flex flex-col items-center gap-1 text-gray-300 transition-colors hover:text-primary"
+            className="flex flex-col items-center gap-1 text-muted-foreground/40 transition-colors hover:text-primary"
           >
             <span className="text-xs">{es.schedule.addActivity}</span>
             <ArrowDown className="h-4 w-4 animate-bounce" />
@@ -103,7 +103,7 @@ export default function Schedule() {
         <p className="text-sm font-medium text-amber-600">{es.schedule.maxReached}</p>
       )}
 
-      <div ref={formRef} className="rounded-xl border bg-white p-5 shadow-sm">
+      <div ref={formRef} className="rounded-xl border bg-card p-5 shadow-sm">
         <AddActivityForm disabled={false} onSubmit={handleAdd} />
       </div>
     </div>

@@ -3,7 +3,8 @@ import api from '@/lib/api';
 import { useStreaks } from '@/hooks/useStreak';
 import { es } from '@/i18n/es';
 import { StreakWidget } from '@/components/streaks/StreakWidget';
-import { Trash2, Plus, AlertTriangle, Info, Crown, Rocket, RotateCcw, Flame, Mountain, Trophy } from 'lucide-react';
+import { StreakHistoryModal } from '@/components/streaks/StreakHistoryModal';
+import { Trash2, Plus, AlertTriangle, Info, Crown, Rocket, RotateCcw, Flame, Mountain, Trophy, BarChart3 } from 'lucide-react';
 import type { Category } from '@shared/types/enums';
 import {
   AlertDialog,
@@ -44,6 +45,7 @@ export default function Habits() {
   const [selectedCategory, setSelectedCategory] = useState<Category>('vital');
   const [deleteTarget, setDeleteTarget] = useState<HabitItem | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [historyTarget, setHistoryTarget] = useState<{ id: string; title: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -87,11 +89,11 @@ export default function Habits() {
   const emptySlots = isAtLimit ? 0 : MAX_HABITS - habits.length;
 
   const creationBar = isAtLimit ? (
-    <div className="rounded-xl border border-amber-200 bg-amber-50/50 px-4 py-2 text-center">
+    <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-amber-500/20 dark:bg-amber-500/10 px-4 py-2 text-center">
       <p className="text-xs text-amber-700">{es.habits.limitReached}</p>
     </div>
   ) : (
-    <div className="rounded-xl border bg-white px-4 py-3 shadow-sm">
+    <div className="rounded-xl border bg-card px-4 py-3 shadow-sm">
       {habits.length === 0 && (
         <h2 className="mb-2 text-xs font-bold text-primary">{es.habits.newVictory}</h2>
       )}
@@ -179,7 +181,7 @@ export default function Habits() {
           </Popover>
         </div>
 
-        <div className="rounded-2xl border bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border bg-card p-5 shadow-sm">
           <div className="mb-4">
             <h2 className="text-sm font-bold text-primary">{es.habits.newVictory}</h2>
             <p className="text-xs text-muted-foreground">{es.habits.newVictorySubtitle}</p>
@@ -237,8 +239,8 @@ export default function Habits() {
             <Rocket className="h-20 w-20 text-slate-200" strokeWidth={1} />
           </div>
           <div className="max-w-sm text-center space-y-2">
-            <h2 className="text-lg font-semibold text-[#1e293b]">{es.habits.emptyTitle}</h2>
-            <p className="text-sm text-gray-400">{es.habits.emptySubtitle}</p>
+            <h2 className="text-lg font-semibold">{es.habits.emptyTitle}</h2>
+            <p className="text-sm text-muted-foreground">{es.habits.emptySubtitle}</p>
           </div>
           <button
             onClick={() => inputRef.current?.focus()}
@@ -246,7 +248,7 @@ export default function Habits() {
           >
             {es.habits.emptyCta}
           </button>
-          <p className="text-xs text-gray-300">{es.habits.emptyTip}</p>
+          <p className="text-xs text-muted-foreground/40">{es.habits.emptyTip}</p>
         </div>
       </div>
     );
@@ -284,13 +286,13 @@ export default function Habits() {
           return (
             <div
               key={habit.id}
-              className={`group flex min-h-0 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-shadow ${isLit ? 'shadow-md' : 'hover:shadow-md'}`}
+              className={`group flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow ${isLit ? 'shadow-md' : 'hover:shadow-md'}`}
             >
               <div className={`h-1 w-full shrink-0 ${catCfg.dot}`} />
 
               <div className="shrink-0 px-3 pt-2.5 pb-1">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="line-clamp-2 flex-1 text-base font-semibold tracking-tight leading-tight text-[#1e293b]">
+                  <h3 className="line-clamp-2 flex-1 text-base font-semibold tracking-tight leading-tight">
                     {habit.title}
                     {streakData?.streak?.streak.status === 'completed' && (
                       <Crown className="ml-0.5 inline h-3.5 w-3.5 shrink-0 text-amber-500" />
@@ -302,8 +304,14 @@ export default function Habits() {
                       {es.categoryShort[habit.category]}
                     </span>
                     <button
+                      onClick={() => setHistoryTarget({ id: habit.id, title: habit.title })}
+                      className="rounded p-0.5 text-transparent group-hover:text-muted-foreground/40 transition-colors hover:!bg-blue-500/10 hover:!text-blue-500"
+                    >
+                      <BarChart3 className="h-3 w-3" />
+                    </button>
+                    <button
                       onClick={() => setDeleteTarget(habit)}
-                      className="rounded p-0.5 text-transparent group-hover:text-slate-300 transition-colors hover:!bg-red-50 hover:!text-red-500"
+                      className="rounded p-0.5 text-transparent group-hover:text-muted-foreground/40 transition-colors hover:!bg-red-500/10 hover:!text-red-500"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
@@ -318,10 +326,10 @@ export default function Habits() {
                 />
               ) : streakData?.recentlyFailed ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-1 fade-in-up">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 drop-shadow-sm">
-                    <Flame className="h-5 w-5 text-gray-300" strokeWidth={2} />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted drop-shadow-sm">
+                    <Flame className="h-5 w-5 text-muted-foreground/40" strokeWidth={2} />
                   </div>
-                  <p className="text-center text-[10px] text-gray-500">
+                  <p className="text-center text-[10px] text-muted-foreground">
                     {es.streak.motivationalRestart}
                   </p>
                   <button
@@ -334,10 +342,10 @@ export default function Habits() {
                 </div>
               ) : (
                 <div className="flex flex-1 flex-col items-center justify-center gap-1">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 drop-shadow-sm">
-                    <Flame className="h-5 w-5 text-gray-300" strokeWidth={1.5} />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted drop-shadow-sm">
+                    <Flame className="h-5 w-5 text-muted-foreground/40" strokeWidth={1.5} />
                   </div>
-                  <p className="text-[10px] text-gray-500">
+                  <p className="text-[10px] text-muted-foreground">
                     {es.streak.firstVictory}
                   </p>
                   <button
@@ -355,9 +363,9 @@ export default function Habits() {
         {Array.from({ length: emptySlots }).map((_, i) => (
           <div
             key={`empty-${i}`}
-            className="flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/30"
+            className="flex items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/30"
           >
-            <span className="text-xs font-semibold text-gray-300">{es.habits.emptySlot}</span>
+            <span className="text-xs font-semibold text-muted-foreground/40">{es.habits.emptySlot}</span>
           </div>
         ))}
       </div>
@@ -365,7 +373,7 @@ export default function Habits() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
               <AlertTriangle className="h-6 w-6 text-red-500" />
             </div>
             <AlertDialogTitle>{es.habits.deleteConfirmTitle}</AlertDialogTitle>
@@ -382,6 +390,15 @@ export default function Habits() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {historyTarget && (
+        <StreakHistoryModal
+          habitId={historyTarget.id}
+          habitTitle={historyTarget.title}
+          open={!!historyTarget}
+          onClose={() => setHistoryTarget(null)}
+        />
+      )}
     </div>
   );
 }
