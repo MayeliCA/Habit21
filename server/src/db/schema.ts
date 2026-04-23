@@ -20,6 +20,8 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
   name: varchar('name', { length: 100 }).notNull(),
+  timezone: varchar('timezone', { length: 50 }).default('UTC').notNull(),
+  timezoneChangedAt: timestamp('timezone_changed_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 

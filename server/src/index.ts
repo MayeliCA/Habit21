@@ -4,7 +4,7 @@ import cron from 'node-cron';
 import { config } from './config/env';
 import { errorHandler } from './middleware/error-handler';
 import apiRoutes from './routes';
-import { runMidnightCron } from './modules/streaks/streak.service';
+import { runHourlyCron } from './modules/streaks/streak.service';
 
 const app = express();
 
@@ -15,8 +15,8 @@ app.use('/api', apiRoutes);
 
 app.use(errorHandler);
 
-cron.schedule('59 23 * * *', () => {
-  runMidnightCron();
+cron.schedule('0 * * * *', () => {
+  runHourlyCron();
 });
 
 app.listen(config.PORT, () => {

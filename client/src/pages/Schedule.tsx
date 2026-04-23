@@ -7,12 +7,20 @@ import { DayTabs } from '@/components/schedule/DayTabs';
 import { ActivityRow } from '@/components/schedule/ActivityRow';
 import { AddActivityForm } from '@/components/schedule/AddActivityForm';
 import { Rocket, ArrowDown } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useToday } from '@/hooks/useToday';
 
 export default function Schedule() {
-  const [activeDay, setActiveDay] = useState<number>(new Date().getDay());
+  const { user } = useAuth();
+  const today = useToday(user?.timezone);
+  const [activeDay, setActiveDay] = useState<number>(new Date(today + 'T12:00:00').getDay());
   const [allActivities, setAllActivities] = useState<ActivityWithLog[]>([]);
   const [loading, setLoading] = useState(true);
   const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setActiveDay(new Date(today + 'T12:00:00').getDay());
+  }, [today]);
 
   const fetchActivities = useCallback(async () => {
     const res = await api.get<ActivityWithLog[]>('/schedule');

@@ -1,6 +1,7 @@
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '../../db';
-import { streaks, habitLogs, habits } from '../../db/schema';
+import { streaks, habitLogs, habits, users } from '../../db/schema';
+import { todayForTimezone, getHourInTimezone } from '../../utils/date';
 import type { Streak, HabitLog, StreakPreview, StreakAttempt, StreakHistory } from '@shared/types/streak';
 
 function serializeStreak(s: any): Streak {
@@ -26,8 +27,8 @@ export async function getActiveStreakForHabit(habitId: string) {
   });
 }
 
-export async function createStreak(habitId: string, userId: string) {
-  const today = new Date().toISOString().slice(0, 10);
+export async function createStreak(habitId: string, userId: string, timezone: string) {
+  const today = todayForTimezone(timezone);
   const [streak] = await db
     .insert(streaks)
     .values({
@@ -97,11 +98,11 @@ export async function logHabitDay(streakId: string, userId: string, dateStr: str
   };
 }
 
-export async function getStreakPreview(habitId: string): Promise<StreakPreview | null> {
+export async function getStreakPreview(habitId: string, timezone: string): Promise<StreakPreview | null> {
   const streak = await getActiveStreakForHabit(habitId);
   if (!streak) return null;
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayForTimezone(timezone);
 
   const todayLog = await db.query.habitLogs.findFirst({
     where: and(eq(habitLogs.streakId, streak.id), eq(habitLogs.date, today)),
@@ -119,11 +120,14 @@ export async function getStreakPreview(habitId: string): Promise<StreakPreview |
   };
 }
 
-export async function hasRecentlyFailedStreak(habitId: string): Promise<boolean> {
+export async function hasRecentlyFailedStreak(habitId: string, timezone: string): Promise<boolean> {
   const twoDaysAgo = (() => {
     const d = new Date();
     d.setDate(d.getDate() - 2);
-    return d.toISOString().slice(0, 10);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   })();
 
   const failed = await db.query.streaks.findFirst({
@@ -147,8 +151,8 @@ export async function getStreakLogs(streakId: string) {
   });
 }
 
-export async function validateActiveStreaks(userId: string): Promise<string[]> {
-  const today = new Date().toISOString().slice(0, 10);
+export async function validateActiveStreaks(userId: string, timezone: string): Promise<string[]> {
+  const today = todayForTimezone(timezone);
 
   const userHabits = await db.query.habits.findMany({
     where: and(eq(habits.userId, userId), eq(habits.isActive, true)),
@@ -198,52 +202,72 @@ export async function validateActiveStreaks(userId: string): Promise<string[]> {
   return broken;
 }
 
-export async function runMidnightCron() {
-  const today = new Date().toISOString().slice(0, 10);
-  const yesterday = (() => {
-    const d = new Date(today + 'T12:00:00');
-    d.setDate(d.getDate() - 1);
-    return d.toISOString().slice(0, 10);
-  })();
-
-  const activeStreaks = await db.query.streaks.findMany({
-    where: eq(streaks.status, 'active'),
+export async function runHourlyCron() {
+  const allUsers = await db.query.users.findMany({
+    columns: { id: true, timezone: true },
   });
 
-  console.log(`[Cron] Processing ${activeStreaks.length} active streaks for ${today}`);
-
-  for (const streak of activeStreaks) {
-    try {
-      const yesterdayLog = await db.query.habitLogs.findFirst({
-        where: and(eq(habitLogs.streakId, streak.id), eq(habitLogs.date, yesterday)),
-      });
-
-      if (!yesterdayLog) {
-        const habit = await db.query.habits.findFirst({
-          where: eq(habits.id, streak.habitId),
-        });
-
-        if (habit) {
-          await db
-            .update(streaks)
-            .set({
-              status: 'failed',
-              archivedAt: new Date(),
-              updatedAt: new Date(),
-            })
-            .where(eq(streaks.id, streak.id));
-
-          await createStreak(streak.habitId, habit.userId);
-
-          console.log(`[Cron] Streak ${streak.id} reset (no log for ${yesterday})`);
-        }
-      }
-    } catch (err) {
-      console.error(`[Cron] Error processing streak ${streak.id}:`, err);
-    }
+  const timezoneMap = new Map<string, string[]>();
+  for (const user of allUsers) {
+    const tz = user.timezone || 'UTC';
+    if (!timezoneMap.has(tz)) timezoneMap.set(tz, []);
+    timezoneMap.get(tz)!.push(user.id);
   }
 
-  console.log(`[Cron] Completed processing for ${today}`);
+  for (const [tz, userIds] of timezoneMap) {
+    const hourInTz = getHourInTimezone(tz);
+    if (hourInTz !== 0) continue;
+
+    const today = todayForTimezone(tz);
+    const yesterday = (() => {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    })();
+
+    console.log(`[Cron] Processing timezone ${tz} (${userIds.length} users), today=${today}, yesterday=${yesterday}`);
+
+    for (const userId of userIds) {
+      try {
+        const userHabits = await db.query.habits.findMany({
+          where: and(eq(habits.userId, userId), eq(habits.isActive, true)),
+          columns: { id: true },
+        });
+
+        for (const habit of userHabits) {
+          const activeStreak = await db.query.streaks.findFirst({
+            where: and(eq(streaks.habitId, habit.id), eq(streaks.status, 'active')),
+          });
+
+          if (!activeStreak) continue;
+
+          const yesterdayLog = await db.query.habitLogs.findFirst({
+            where: and(eq(habitLogs.streakId, activeStreak.id), eq(habitLogs.date, yesterday)),
+          });
+
+          if (!yesterdayLog) {
+            await db
+              .update(streaks)
+              .set({
+                status: 'failed',
+                archivedAt: new Date(),
+                updatedAt: new Date(),
+              })
+              .where(eq(streaks.id, activeStreak.id));
+
+            await createStreak(habit.id, userId, tz);
+
+            console.log(`[Cron] Streak ${activeStreak.id} reset for user ${userId} (no log for ${yesterday} in ${tz})`);
+          }
+        }
+      } catch (err) {
+        console.error(`[Cron] Error processing user ${userId}:`, err);
+      }
+    }
+  }
 }
 
 export async function getStreakHistory(habitId: string, userId: string): Promise<StreakHistory | null> {

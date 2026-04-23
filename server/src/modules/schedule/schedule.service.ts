@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { eq, and, sql } from 'drizzle-orm';
 import { db } from '../../db';
 import { scheduleActivities, scheduleActivityLogs } from '../../db/schema';
+import { todayForTimezone } from '../../utils/date';
 
 const MAX_PER_DAY = 18;
 
@@ -49,7 +50,7 @@ export const updateActivitySchema = z
 
 export async function listActivities(req: Request, res: Response) {
   const userId = req.user!.userId;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayForTimezone(req.user!.timezone);
 
   const activities = await db.query.scheduleActivities.findMany({
     where: eq(scheduleActivities.userId, userId),
@@ -138,7 +139,7 @@ export async function deleteActivity(req: Request<{ id: string }>, res: Response
 
 export async function getTodayStatus(req: Request, res: Response) {
   const userId = req.user!.userId;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayForTimezone(req.user!.timezone);
   const jsDay = new Date(today + 'T12:00:00').getDay();
 
   const activities = await db.query.scheduleActivities.findMany({

@@ -6,6 +6,7 @@ interface AuthUser {
   id: string;
   email: string;
   name: string;
+  timezone: string;
 }
 
 interface AuthContextType {
@@ -18,6 +19,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+function detectTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return 'UTC';
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +35,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem('habit21_user');
     if (stored) {
       try {
-        setUser(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        const savedUser: AuthUser = {
+          id: parsed.id,
+          email: parsed.email,
+          name: parsed.name,
+          timezone: parsed.timezone || 'UTC',
+        };
+        setUser(savedUser);
+        syncTimezone(savedUser.timezone);
       } catch {
         localStorage.removeItem('habit21_user');
       }
@@ -34,19 +51,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
+  const syncTimezone = useCallback((currentTz: string) => {
+    const detected = detectTimezone();
+    if (detected !== currentTz) {
+      api.patch('/auth/timezone', { timezone: detected })
+        .then((res) => {
+          const data = res.data;
+          if (data.token) {
+            localStorage.setItem('habit21_token', data.token);
+          }
+          if (data.user?.timezone) {
+            const updated = { ...JSON.parse(localStorage.getItem('habit21_user') || '{}'), timezone: data.user.timezone };
+            localStorage.setItem('habit21_user', JSON.stringify(updated));
+            setUser((prev) => prev ? { ...prev, timezone: data.user.timezone } : prev);
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
+
   const handleAuth = useCallback((data: AuthResponse) => {
+    const authUser: AuthUser = {
+      id: data.user.id,
+      email: data.user.email,
+      name: data.user.name,
+      timezone: data.user.timezone || 'UTC',
+    };
     localStorage.setItem('habit21_token', data.token);
-    localStorage.setItem('habit21_user', JSON.stringify(data.user));
-    setUser(data.user);
+    localStorage.setItem('habit21_user', JSON.stringify(authUser));
+    setUser(authUser);
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { data } = await api.post<AuthResponse>('/auth/login', { email, password });
+    const timezone = detectTimezone();
+    const { data } = await api.post<AuthResponse>('/auth/login', { email, password, timezone });
     handleAuth(data);
   }, [handleAuth]);
 
   const register = useCallback(async (email: string, password: string, name: string) => {
-    const { data } = await api.post<AuthResponse>('/auth/register', { email, password, name });
+    const timezone = detectTimezone();
+    const { data } = await api.post<AuthResponse>('/auth/register', { email, password, name, timezone });
     handleAuth(data);
   }, [handleAuth]);
 

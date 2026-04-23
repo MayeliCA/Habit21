@@ -35,8 +35,8 @@ export function WeekComparison({ data }: WeekComparisonProps) {
         <span className="text-sm font-semibold">{es.dashboard.vsLastWeek}</span>
         <div className="flex items-center gap-1">
           <TrendIcon className={`h-4 w-4 ${trendColor}`} />
-          <span className={`text-xs font-medium ${trendColor}`}>
-            {absDiff}% {trendLabel}
+          <span className={`text-xs font-bold tabular-nums ${trendColor}`}>
+            {isUp ? '+' : isDown ? '-' : ''}{absDiff}%
           </span>
         </div>
       </div>

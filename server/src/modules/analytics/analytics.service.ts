@@ -429,7 +429,7 @@ export async function getAnalytics(userId: string, dateStr: string): Promise<Ana
   return { daily, weekly, monthly, weeklyByDay, monthlyByWeek, successMetric };
 }
 
-export async function getMonthlyDots(userId: string, month?: string): Promise<MonthlyDotsResponse> {
+export async function getMonthlyDots(userId: string, month: string | undefined, today: string): Promise<MonthlyDotsResponse> {
   const activities = await db.query.scheduleActivities.findMany({
     where: eq(scheduleActivities.userId, userId),
     columns: { id: true, category: true, time: true, endTime: true, daysOfWeek: true },
@@ -446,7 +446,6 @@ export async function getMonthlyDots(userId: string, month?: string): Promise<Mo
     return { days: [], firstLogDate };
   }
 
-  const today = new Date().toISOString().slice(0, 10);
   const targetMonth = month || today.slice(0, 7);
   const [year, mon] = targetMonth.split('-').map(Number);
   const lastDay = new Date(year, mon, 0).getDate();

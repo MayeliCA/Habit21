@@ -10,6 +10,8 @@ import type { StreakPreview } from '@shared/types/streak';
 import type { Category } from '@shared/types/enums';
 import { ArrowRight, Flame, Star, Crown } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
+import { useAuth } from '@/hooks/useAuth';
+import { useToday } from '@/hooks/useToday';
 import { formatClockTime } from '@/lib/format';
 
 const CATEGORY_COLORS: Record<Category, string> = {
@@ -90,14 +92,15 @@ function ScheduleStreakCard({
   streak,
   pendingStreak,
   weeklyByDay,
+  today,
 }: {
   streak: number;
   pendingStreak: number;
   weeklyByDay: DayTotal[];
+  today: string;
 }) {
   const { settings } = useSettings();
   const threshold = settings.successThreshold;
-  const today = new Date().toISOString().slice(0, 10);
 
   const todayEntry = weeklyByDay.find((d) => d.date === today);
   const todayPct = todayEntry && todayEntry.planned > 0
@@ -348,11 +351,10 @@ export default function Home() {
   const [habitsStreaks, setHabitsStreaks] = useState<StreakEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const { user } = useAuth();
+  const today = useToday(user?.timezone);
 
   useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10);
-
     Promise.all([
       api.get<ActivityWithLog[]>('/tasks', { params: { date: today } }),
       api.get<AnalyticsResponse>('/analytics', { params: { date: today } }),
@@ -367,7 +369,7 @@ export default function Home() {
         setHabitsStreaks(habitsRes.data.streaks);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [today]);
 
   if (loading) {
     return <p className="text-muted-foreground">{es.common.loading}</p>;
@@ -382,6 +384,7 @@ export default function Home() {
           streak={scheduleStreak?.streak ?? 0}
           pendingStreak={scheduleStreak?.pendingStreak ?? 0}
           weeklyByDay={weeklyByDay}
+          today={today}
         />
         <HabitsStreakCard streaks={habitsStreaks} />
       </div>

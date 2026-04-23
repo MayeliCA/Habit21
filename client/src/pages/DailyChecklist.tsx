@@ -4,6 +4,8 @@ import { es } from '@/i18n/es';
 import { ComplianceBar } from '@/components/streaks/ComplianceBar';
 import { BookOpen, Heart, Coffee, Gamepad2 } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
+import { useAuth } from '@/hooks/useAuth';
+import { useToday } from '@/hooks/useToday';
 import { formatClockTime } from '@/lib/format';
 import confetti from 'canvas-confetti';
 import type { ActivityWithLog } from '@shared/types/schedule';
@@ -34,8 +36,8 @@ export default function DailyChecklist() {
   const [activities, setActivities] = useState<ActivityWithLog[]>([]);
   const [loading, setLoading] = useState(true);
   const { settings } = useSettings();
-
-  const today = new Date().toISOString().slice(0, 10);
+  const { user } = useAuth();
+  const today = useToday(user?.timezone);
 
   useEffect(() => {
     api

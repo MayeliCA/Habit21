@@ -6,6 +6,8 @@ import { DayDetail } from '@/components/dashboard/DayDetail';
 import { CategoryProgressBars } from '@/components/dashboard/CategoryProgressBars';
 import { MonthlyDotGrid } from '@/components/dashboard/MonthlyDotGrid';
 import { WeekComparison } from '@/components/dashboard/WeekComparison';
+import { useAuth } from '@/hooks/useAuth';
+import { useToday } from '@/hooks/useToday';
 import type { AnalyticsResponse, DayCompliance, DayActivityDetail, WeekComparison as WeekComparisonType, MonthlyDotsResponse } from '@shared/types/analytics';
 
 export default function Dashboard() {
@@ -17,9 +19,10 @@ export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [dayLoading, setDayLoading] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [currentMonth, setCurrentMonth] = useState(() => new Date().toISOString().slice(0, 7));
 
-  const today = new Date().toISOString().slice(0, 10);
+  const { user } = useAuth();
+  const today = useToday(user?.timezone);
+  const [currentMonth, setCurrentMonth] = useState(() => today.slice(0, 7));
 
   const fetchMonthDots = useCallback((month: string) => {
     api.get<MonthlyDotsResponse>('/analytics/monthly-dots', { params: { month } })
