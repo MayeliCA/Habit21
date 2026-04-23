@@ -9,6 +9,7 @@ import { AddActivityForm } from '@/components/schedule/AddActivityForm';
 import { Rocket, ArrowDown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToday } from '@/hooks/useToday';
+import { TimelineBar } from '@/components/schedule/TimelineBar';
 
 export default function Schedule() {
   const { user } = useAuth();
@@ -62,57 +63,77 @@ export default function Schedule() {
   }
 
   return (
-    <div className="space-y-6 page-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{es.schedule.title}</h1>
-        <span className="text-sm text-muted-foreground">
-          {es.schedule.totalActivities.replace('{count}', String(totalCount))}
-        </span>
+    <div className="flex h-[calc(100vh-7.5rem)] flex-col gap-4 page-fade-in">
+      <div className="shrink-0">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">{es.schedule.title}</h1>
+          <span className="text-xs text-muted-foreground">
+            {es.schedule.totalActivities.replace('{count}', String(totalCount))}
+          </span>
+        </div>
+        <div className="mt-2">
+          <div className="h-1 w-full overflow-hidden rounded-full bg-border">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                totalCount >= 17
+                  ? 'bg-red-500 animate-pulse'
+                  : totalCount >= 13
+                    ? 'bg-orange-500'
+                    : totalCount >= 6
+                      ? 'bg-amber-400'
+                      : 'bg-green-500'
+              }`}
+              style={{ width: `${Math.min((totalCount / 18) * 100, 100)}%` }}
+            />
+          </div>
+          {totalCount >= 13 && (
+            <p className={`mt-1 text-xs font-medium ${totalCount >= 17 ? 'text-red-500' : 'text-orange-500'}`}>
+              {totalCount >= 18 ? es.schedule.capacityFull : es.schedule.capacityWarning}
+            </p>
+          )}
+        </div>
       </div>
 
       <DayTabs active={activeDay} onChange={setActiveDay} />
 
-      {dayActivities.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-5 py-12">
-          <div className="relative">
-            <Rocket className="h-16 w-16 text-slate-200" strokeWidth={1} />
-            <svg className="absolute -right-6 top-1 h-10 w-10 text-slate-200/60" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3">
-              <path d="M5 35 Q10 10 35 5" />
-            </svg>
-          </div>
-          <div className="max-w-sm space-y-2 text-center">
-            <h2 className="text-lg font-semibold">{es.schedule.emptyTitle}</h2>
-            <p className="text-sm text-muted-foreground">{es.schedule.emptySubtitle}</p>
-          </div>
-          <button
-            onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-            className="flex flex-col items-center gap-1 text-muted-foreground/40 transition-colors hover:text-primary"
-          >
-            <span className="text-xs">{es.schedule.addActivity}</span>
-            <ArrowDown className="h-4 w-4 animate-bounce" />
-          </button>
-        </div>
-      ) : (
-        <div className="relative ml-3">
-          <div className="absolute left-0 top-3 bottom-3 w-px bg-gray-200" />
-          <div className="space-y-2">
-            {dayActivities.map((item) => (
-              <ActivityRow
-                key={item.id}
-                item={item}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
+      {dayActivities.length > 0 && (
+        <div className="shrink-0">
+          <TimelineBar activities={dayActivities} />
         </div>
       )}
 
-      {totalCount >= 18 && (
-        <p className="text-sm font-medium text-amber-600">{es.schedule.maxReached}</p>
-      )}
+      <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin">
+        {dayActivities.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-5 py-8">
+            <div className="relative">
+              <Rocket className="h-16 w-16 text-slate-200" strokeWidth={1} />
+              <svg className="absolute -right-6 top-1 h-10 w-10 text-slate-200/60" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3">
+                <path d="M5 35 Q10 10 35 5" />
+              </svg>
+            </div>
+            <div className="max-w-sm space-y-2 text-center">
+              <h2 className="text-lg font-semibold">{es.schedule.emptyTitle}</h2>
+              <p className="text-sm text-muted-foreground">{es.schedule.emptySubtitle}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="relative ml-3">
+            <div className="absolute left-0 top-3 bottom-3 w-px bg-border" />
+            <div className="space-y-2">
+              {dayActivities.map((item) => (
+                <ActivityRow
+                  key={item.id}
+                  item={item}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
-      <div ref={formRef} className="rounded-xl border bg-card p-5 shadow-sm">
-        <AddActivityForm disabled={false} onSubmit={handleAdd} />
+      <div ref={formRef} className="shrink-0 rounded-xl border bg-card p-5 shadow-sm">
+        <AddActivityForm disabled={totalCount >= 18} onSubmit={handleAdd} />
       </div>
     </div>
   );

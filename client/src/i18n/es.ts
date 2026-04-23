@@ -89,6 +89,8 @@ export const es = {
     selectDays: 'Seleccionar días',
     maxReached: 'Máximo 18 actividades alcanzado',
     totalActivities: '{count} de 18 actividades',
+    capacityWarning: 'Te acercas al límite de saturación saludable',
+    capacityFull: 'Límite de saturación alcanzado',
     noActivities: 'No hay actividades. Agrega una para empezar.',
     emptyTitle: 'Tu día es un lienzo en blanco.',
     emptySubtitle: 'Diseña tu rutina ideal agregando actividades en el formulario de abajo. Divide tu día en ejes Vital, Académico, Personal y de Fuga para mantener el equilibrio.',
@@ -99,6 +101,7 @@ export const es = {
     am: 'AM',
     pm: 'PM',
     days: { sun: 'D', mon: 'L', tue: 'M', wed: 'X', thu: 'J', fri: 'V', sat: 'S' },
+    tooltipTime: '{activity} · {start}{end}',
     fullDays: {
       '0': 'Domingo',
       '1': 'Lunes',
