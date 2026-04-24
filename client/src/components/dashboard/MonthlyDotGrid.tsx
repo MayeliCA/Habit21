@@ -63,29 +63,43 @@ export function MonthlyDotGrid({ data, today, currentMonth, firstLogDate, onMont
   for (const d of days) calendarCells.push(d);
   while (calendarCells.length % 7 !== 0) calendarCells.push(null);
 
+  const pastDays = data.filter((d) => d.date <= today);
+  const passedDays = pastDays.filter((d) => d.passed);
+
+  let bestStreak = 0;
+  let currentStreak = 0;
+  for (const d of pastDays) {
+    if (d.passed) {
+      currentStreak++;
+      if (currentStreak > bestStreak) bestStreak = currentStreak;
+    } else {
+      currentStreak = 0;
+    }
+  }
+
   return (
-    <div className="flex h-full flex-col rounded-lg border bg-card p-3 shadow-sm">
-      <div className="mb-2 flex items-center justify-between">
+    <div className="flex flex-col rounded-lg border bg-card px-3 py-3 shadow-sm monthly-card md:h-full md:py-2">
+      <div className="mb-2 flex items-center justify-between md:mb-1.5">
         <button
           onClick={() => canGoPrev && onMonthChange(prevMonth)}
           disabled={!canGoPrev}
-          className={`rounded-md p-1 transition-colors ${canGoPrev ? 'hover:bg-accent text-foreground' : 'text-muted-foreground/30 cursor-not-allowed'}`}
+          className={`rounded-md p-0.5 transition-colors ${canGoPrev ? 'hover:bg-accent text-foreground' : 'text-muted-foreground/30 cursor-not-allowed'}`}
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-3.5 w-3.5 monthly-nav-icon" />
         </button>
-        <span className="text-sm font-semibold">{monthLabel}</span>
+        <span className="text-xs font-semibold text-muted-foreground">{monthLabel}</span>
         <button
           onClick={() => canGoNext && onMonthChange(nextMonth)}
           disabled={!canGoNext}
-          className={`rounded-md p-1 transition-colors ${canGoNext ? 'hover:bg-accent text-foreground' : 'text-muted-foreground/30 cursor-not-allowed'}`}
+          className={`rounded-md p-0.5 transition-colors ${canGoNext ? 'hover:bg-accent text-foreground' : 'text-muted-foreground/30 cursor-not-allowed'}`}
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-3.5 w-3.5 monthly-nav-icon" />
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-0.5 text-center">
+      <div className="grid grid-cols-7 gap-1 text-center monthly-grid md:gap-0.5">
         {es.dashboard.dayHeaders.map((h) => (
-          <div key={h} className="text-[10px] font-bold uppercase text-muted-foreground py-0.5">
+          <div key={h} className="text-[0.625rem] font-bold uppercase text-muted-foreground py-0.5">
             {h}
           </div>
         ))}
@@ -96,20 +110,19 @@ export function MonthlyDotGrid({ data, today, currentMonth, firstLogDate, onMont
           const dayData = dataMap.get(cell.date);
           const isToday = cell.date === today;
           const isFuture = cell.date > today;
-          const isPast = cell.date <= today;
 
           let dotColor = 'bg-muted-foreground/10';
           if (!isFuture && dayData) {
-            if (dayData.passed) dotColor = 'bg-green-500';
-            else if (dayData.pct >= 50) dotColor = 'bg-amber-500';
-            else if (dayData.pct > 0) dotColor = 'bg-red-400';
+            if (dayData.passed) dotColor = 'bg-success';
+            else if (dayData.pct >= 50) dotColor = 'bg-warning';
+            else if (dayData.pct > 0) dotColor = 'bg-danger';
             else dotColor = 'bg-muted-foreground/20';
           }
 
           return (
             <div
               key={cell.date}
-              className={`flex h-7 items-center justify-center rounded text-[10px] font-semibold ${
+              className={`flex h-7 items-center justify-center rounded text-[0.5625rem] font-semibold md:h-6 ${
                 isToday ? 'ring-2 ring-primary' : ''
               } ${dotColor} ${!isFuture && dayData && dayData.pct > 0 ? 'text-white' : 'text-muted-foreground'}`}
               title={dayData ? `${cell.date}: ${dayData.pct.toFixed(0)}%` : cell.date}
@@ -120,11 +133,30 @@ export function MonthlyDotGrid({ data, today, currentMonth, firstLogDate, onMont
         })}
       </div>
 
-      <div className="mt-auto flex flex-wrap items-center gap-2 border-t pt-2 text-[10px] text-muted-foreground">
-        <span className="flex items-center gap-0.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-green-500" />{es.dashboard.legendPassed}</span>
-        <span className="flex items-center gap-0.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-500" />{es.dashboard.legendPartial}</span>
-        <span className="flex items-center gap-0.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-red-400" />{es.dashboard.legendFailed}</span>
-        <span className="flex items-center gap-0.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-muted-foreground/20" />{es.dashboard.legendNoData}</span>
+      {pastDays.length > 0 && (
+        <div className="flex flex-1 items-center mt-2">
+          <div className="w-full grid grid-cols-2 gap-2 md:gap-1.5">
+          <div className="rounded-md bg-muted/50 px-3 py-2 text-center md:px-2 md:py-1.5">
+            <p className="text-xs font-bold tabular-nums">
+              {es.dashboard.monthDaysPassed.replace('{passed}', String(passedDays.length)).replace('{total}', String(pastDays.length))}
+            </p>
+            <p className="text-[0.5625rem] text-muted-foreground">{es.dashboard.passed}</p>
+          </div>
+          <div className="rounded-md bg-muted/50 px-3 py-2 text-center md:px-2 md:py-1.5">
+            <p className="text-xs font-bold tabular-nums">
+              {bestStreak > 0 ? es.dashboard.monthStreakDays.replace('{count}', String(bestStreak)) : '–'}
+            </p>
+            <p className="text-[0.5625rem] text-muted-foreground">{es.dashboard.monthStreak}</p>
+          </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-auto flex flex-wrap items-center gap-2 pt-2 text-[0.5625rem] text-muted-foreground md:gap-1.5 md:pt-0">
+        <span className="flex items-center gap-0.5"><span className="inline-block h-2 w-2 rounded-sm bg-success" />{es.dashboard.legendPassed}</span>
+        <span className="flex items-center gap-0.5"><span className="inline-block h-2 w-2 rounded-sm bg-warning" />{es.dashboard.legendPartial}</span>
+        <span className="flex items-center gap-0.5"><span className="inline-block h-2 w-2 rounded-sm bg-danger" />{es.dashboard.legendFailed}</span>
+        <span className="flex items-center gap-0.5"><span className="inline-block h-2 w-2 rounded-sm bg-muted-foreground/20" />{es.dashboard.legendNoData}</span>
       </div>
     </div>
   );

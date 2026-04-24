@@ -19,22 +19,22 @@ export function WeekComparison({ data }: WeekComparisonProps) {
   let trendLabel: string = es.dashboard.weekSame;
   if (isUp) {
     TrendIcon = TrendingUp;
-    trendColor = 'text-green-600';
+    trendColor = 'text-success-dark';
     trendLabel = es.dashboard.weekUp;
   } else if (isDown) {
     TrendIcon = TrendingDown;
-    trendColor = 'text-red-500';
+    trendColor = 'text-danger';
     trendLabel = es.dashboard.weekDown;
   }
 
-  const thisPctColor = thisWeek.avgPct >= 80 ? 'text-green-600' : thisWeek.avgPct >= 50 ? 'text-amber-600' : 'text-red-500';
+  const thisPctColor = thisWeek.avgPct >= 80 ? 'text-success-dark' : thisWeek.avgPct >= 50 ? 'text-warning-dark' : 'text-danger';
 
   return (
-    <div className="rounded-lg border bg-card p-3 shadow-sm">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-semibold">{es.dashboard.vsLastWeek}</span>
+    <div className="rounded-lg border bg-card px-3 py-2 shadow-sm">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs font-semibold text-muted-foreground">{es.dashboard.vsLastWeek}</span>
         <div className="flex items-center gap-1">
-          <TrendIcon className={`h-4 w-4 ${trendColor}`} />
+          <TrendIcon className={`h-3.5 w-3.5 ${trendColor}`} />
           <span className={`text-xs font-bold tabular-nums ${trendColor}`}>
             {isUp ? '+' : isDown ? '-' : ''}{absDiff}%
           </span>
@@ -42,21 +42,21 @@ export function WeekComparison({ data }: WeekComparisonProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-md bg-muted/50 px-3 py-2 text-center">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{es.dashboard.thisWeek}</p>
-          <p className={`text-lg font-bold tabular-nums leading-tight ${thisPctColor}`}>
+        <div className="rounded-md bg-muted/50 px-2.5 py-1.5 text-center">
+          <p className="text-[0.5625rem] font-medium uppercase tracking-wider text-muted-foreground">{es.dashboard.thisWeek}</p>
+          <p className={`text-base font-bold tabular-nums leading-tight ${thisPctColor}`}>
             {thisWeek.avgPct.toFixed(0)}%
           </p>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-[0.5625rem] text-muted-foreground">
             {thisWeek.daysPassed}/{thisWeek.daysTotal} {es.dashboard.passed}
           </p>
         </div>
-        <div className="rounded-md bg-muted/50 px-3 py-2 text-center">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{es.dashboard.lastWeek}</p>
-          <p className="text-lg font-bold tabular-nums leading-tight text-muted-foreground">
+        <div className="rounded-md bg-muted/50 px-2.5 py-1.5 text-center">
+          <p className="text-[0.5625rem] font-medium uppercase tracking-wider text-muted-foreground">{es.dashboard.lastWeek}</p>
+          <p className="text-base font-bold tabular-nums leading-tight text-muted-foreground">
             {lastWeek.avgPct.toFixed(0)}%
           </p>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-[0.5625rem] text-muted-foreground">
             {lastWeek.daysPassed}/{lastWeek.daysTotal} {es.dashboard.passed}
           </p>
         </div>

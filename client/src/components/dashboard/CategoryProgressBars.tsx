@@ -9,11 +9,53 @@ const CATEGORY_CONFIG: Record<Category, {
   bgTrack: string;
   icon: React.ElementType;
 }> = {
-  academic: { color: 'bg-blue-500', bgTrack: 'bg-blue-100', icon: BookOpen },
-  vital: { color: 'bg-green-500', bgTrack: 'bg-green-100', icon: Heart },
-  personal: { color: 'bg-purple-500', bgTrack: 'bg-purple-100', icon: Coffee },
-  escape: { color: 'bg-amber-500', bgTrack: 'bg-amber-100', icon: Gamepad2 },
+  academic: { color: 'bg-academic', bgTrack: 'bg-academic-light', icon: BookOpen },
+  vital: { color: 'bg-vital', bgTrack: 'bg-vital-light', icon: Heart },
+  personal: { color: 'bg-personal', bgTrack: 'bg-personal-light', icon: Coffee },
+  escape: { color: 'bg-escape', bgTrack: 'bg-escape-light', icon: Gamepad2 },
 };
+
+interface CategoryBarCardProps {
+  data: CategoryBreakdown;
+}
+
+export function CategoryBarCard({ data }: CategoryBarCardProps) {
+  const cfg = CATEGORY_CONFIG[data.category];
+  const Icon = cfg.icon;
+  const pct = data.plannedMinutes > 0
+    ? Math.min((data.completedMinutes / data.plannedMinutes) * 100, 100)
+    : 0;
+  const label = es.categoryShort[data.category];
+
+  return (
+    <div className="flex h-full items-center gap-2.5 rounded-lg border bg-card px-3 py-2 shadow-sm">
+      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${cfg.color}`}>
+        <Icon className="h-4 w-4 text-white" strokeWidth={2} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold">{label}</span>
+          <span className={`text-xs font-bold tabular-nums ${
+            pct >= 80 ? 'text-success-dark' : pct >= 50 ? 'text-warning-dark' : 'text-danger'
+          }`}>
+            {Math.round(pct)}%
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[0.625rem] text-muted-foreground">
+            {formatTime(data.completedMinutes)}/{formatTime(data.plannedMinutes)}
+          </span>
+        </div>
+        <div className={`mt-0.5 h-1.5 w-full overflow-hidden rounded-full ${cfg.bgTrack}`}>
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${cfg.color}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface CategoryProgressBarsProps {
   data: CategoryBreakdown[];
@@ -67,26 +109,26 @@ export function CategoryProgressBars({ data, compact }: CategoryProgressBarsProp
           return (
             <div
               key={d.category}
-              className="flex flex-1 items-center gap-3 rounded-lg border bg-card p-3 shadow-sm"
+              className="flex flex-1 items-center gap-2.5 rounded-lg border bg-card px-3 py-2 shadow-sm"
             >
-              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${cfg.color}`}>
+              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${cfg.color}`}>
                 <Icon className="h-4 w-4 text-white" strokeWidth={2} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold">{label}</span>
-                  <span className={`text-sm font-bold tabular-nums ${
-                    pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-amber-600' : 'text-red-500'
+                  <span className="text-xs font-semibold">{label}</span>
+                  <span className={`text-xs font-bold tabular-nums ${
+                    pct >= 80 ? 'text-success-dark' : pct >= 50 ? 'text-warning-dark' : 'text-danger'
                   }`}>
                     {Math.round(pct)}%
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-[0.625rem] text-muted-foreground">
                     {formatTime(d.completedMinutes)}/{formatTime(d.plannedMinutes)}
                   </span>
                 </div>
-                <div className={`mt-1 h-2 w-full overflow-hidden rounded-full ${cfg.bgTrack}`}>
+                <div className={`mt-0.5 h-1.5 w-full overflow-hidden rounded-full ${cfg.bgTrack}`}>
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${cfg.color}`}
                     style={{ width: `${pct}%` }}
@@ -128,11 +170,11 @@ export function CategoryProgressBars({ data, compact }: CategoryProgressBarsProp
               />
             </div>
             <div className="mt-1.5 flex items-center justify-between">
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-[0.625rem] text-muted-foreground">
                 {d.activities.completed}/{d.activities.planned} {es.dashboard.activities}
               </span>
               <span className={`text-xs font-semibold ${
-                pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-amber-600' : 'text-red-500'
+                pct >= 80 ? 'text-success-dark' : pct >= 50 ? 'text-warning-dark' : 'text-danger'
               }`}>
                 {Math.round(pct)}%
               </span>
@@ -142,11 +184,11 @@ export function CategoryProgressBars({ data, compact }: CategoryProgressBarsProp
       })}
       {bestLabel && (
         <div className="col-span-full mt-1 text-xs text-muted-foreground">
-          <span className="font-medium text-green-600">{bestLabel}</span>
+          <span className="font-medium text-success-dark">{bestLabel}</span>
           {worstLabel && (
             <>
               {es.dashboard.insightSeparator}
-              <span className="font-medium text-amber-600">{worstLabel}</span>
+              <span className="font-medium text-warning-dark">{worstLabel}</span>
             </>
           )}
         </div>

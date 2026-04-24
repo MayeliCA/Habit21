@@ -1,5 +1,4 @@
 import { es } from '@/i18n/es';
-import { formatTime } from '@/lib/format';
 import { useSettings } from '@/hooks/useSettings';
 import { Check, X, Minus } from 'lucide-react';
 import type { DayTotal } from '@shared/types/analytics';
@@ -27,7 +26,7 @@ export function WeekGrid({ data, today, selectedDate, onSelectDate }: WeekGridPr
 
         let barColor = 'bg-muted-foreground/15';
         if (!isFuture && hasData) {
-          barColor = passed ? 'bg-green-500' : pct >= 50 ? 'bg-amber-500' : pct > 0 ? 'bg-red-400' : 'bg-muted-foreground/25';
+          barColor = passed ? 'bg-success' : pct >= 50 ? 'bg-warning' : pct > 0 ? 'bg-danger' : 'bg-muted-foreground/25';
         }
 
         return (
@@ -35,7 +34,7 @@ export function WeekGrid({ data, today, selectedDate, onSelectDate }: WeekGridPr
             key={day.date}
             onClick={() => !isFuture && onSelectDate(day.date)}
             disabled={isFuture}
-            className={`flex flex-col items-center gap-1.5 rounded-lg border px-2 py-3 transition-all ${
+            className={`flex flex-col items-center gap-1 rounded-lg border px-1 sm:px-2 py-2 transition-all ${
               isSelected
                 ? 'border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm'
                 : isToday
@@ -55,16 +54,14 @@ export function WeekGrid({ data, today, selectedDate, onSelectDate }: WeekGridPr
               <>
                 <div className="flex items-center gap-1">
                   {passed ? (
-                    <Check className="h-4 w-4 text-green-500" strokeWidth={2.5} />
+                    <Check className="h-4 w-4 text-success" strokeWidth={2.5} />
                   ) : (
-                    <X className="h-4 w-4 text-red-400" strokeWidth={2.5} />
+                    <X className="h-4 w-4 text-danger" strokeWidth={2.5} />
                   )}
-                  <span className="text-sm font-bold tabular-nums">{Math.round(pct)}%</span>
+                  <span className="hidden sm:inline text-sm font-bold tabular-nums">{Math.round(pct)}%</span>
+                  <span className="sm:hidden text-[0.625rem] font-bold tabular-nums">{Math.round(pct)}</span>
                 </div>
-                <span className="text-[11px] text-muted-foreground tabular-nums">
-                  {formatTime(day.completed)}/{formatTime(day.planned)}
-                </span>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
                   <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${Math.min(pct, 100)}%` }} />
                 </div>
               </>
