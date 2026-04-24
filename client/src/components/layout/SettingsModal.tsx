@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings, Target, Sparkles, Clock, Sun, Moon } from 'lucide-react';
+import { Settings, Target, Sparkles, Clock, Sun, Moon, Palette } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import { es } from '@/i18n/es';
 import type { AppSettings, ThemeMode } from '@/hooks/useSettings';
@@ -29,7 +29,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
     <div className="fixed inset-0 z-[60] flex items-center justify-center" onClick={handleCancel}>
       <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
       <div
-        className="relative z-10 w-full max-w-md rounded-2xl bg-card p-6 shadow-lg fade-in-up"
+        className="relative z-10 mx-3 sm:mx-auto w-full max-w-md rounded-2xl bg-card p-4 sm:p-6 shadow-lg fade-in-up"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-6 flex items-center gap-2.5">
@@ -40,14 +40,19 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
         <div className="space-y-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Sun className="h-4 w-4 text-muted-foreground dark:hidden" strokeWidth={1.5} />
-              <Moon className="h-4 w-4 text-muted-foreground hidden dark:block" strokeWidth={1.5} />
+              {draft.theme === 'dark' ? (
+                <Moon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+              ) : draft.theme === 'vintage' ? (
+                <Palette className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+              ) : (
+                <Sun className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+              )}
               <span className="text-sm font-medium">{es.settings.theme}</span>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setDraft({ ...draft, theme: 'light' })}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-medium transition-all ${
                   draft.theme === 'light'
                     ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/20'
                     : 'border-border text-muted-foreground hover:bg-accent'
@@ -58,7 +63,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               </button>
               <button
                 onClick={() => setDraft({ ...draft, theme: 'dark' })}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-medium transition-all ${
                   draft.theme === 'dark'
                     ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/20'
                     : 'border-border text-muted-foreground hover:bg-accent'
@@ -66,6 +71,17 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               >
                 <Moon className="h-4 w-4" strokeWidth={1.5} />
                 {es.settings.themeDark}
+              </button>
+              <button
+                onClick={() => setDraft({ ...draft, theme: 'vintage' })}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-medium transition-all ${
+                  draft.theme === 'vintage'
+                    ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/20'
+                    : 'border-border text-muted-foreground hover:bg-accent'
+                }`}
+              >
+                <Palette className="h-4 w-4" strokeWidth={1.5} />
+                {es.settings.themeVintage}
               </button>
             </div>
           </div>
@@ -102,7 +118,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             >
               <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-card shadow-sm transition-transform ${draft.celebrationsEnabled ? 'left-[22px]' : 'left-0.5'}`} />
             </button>
-            <span className="text-[10px] text-muted-foreground">{draft.celebrationsEnabled ? es.settings.on : es.settings.off}</span>
+            <span className="text-[0.625rem] text-muted-foreground">{draft.celebrationsEnabled ? es.settings.on : es.settings.off}</span>
           </div>
 
           <div className="space-y-2">
@@ -113,7 +129,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             <div className="flex gap-2">
               <button
                 onClick={() => setDraft({ ...draft, timeFormat: '12h' })}
-                className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
+                className={`flex-1 rounded-xl border px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium transition-all ${
                   draft.timeFormat === '12h'
                     ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/20'
                     : 'border-border text-muted-foreground hover:bg-accent'
@@ -123,7 +139,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               </button>
               <button
                 onClick={() => setDraft({ ...draft, timeFormat: '24h' })}
-                className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
+                className={`flex-1 rounded-xl border px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium transition-all ${
                   draft.timeFormat === '24h'
                     ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/20'
                     : 'border-border text-muted-foreground hover:bg-accent'

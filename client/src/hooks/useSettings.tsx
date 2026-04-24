@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 
-export type ThemeMode = 'light' | 'dark';
+export type ThemeMode = 'light' | 'dark' | 'vintage';
 
 export interface AppSettings {
   successThreshold: number;
@@ -25,10 +25,11 @@ const SettingsContext = createContext<SettingsContextType | null>(null);
 
 function applyTheme(theme: ThemeMode) {
   const root = document.documentElement;
+  root.classList.remove('dark', 'vintage');
   if (theme === 'dark') {
     root.classList.add('dark');
-  } else {
-    root.classList.remove('dark');
+  } else if (theme === 'vintage') {
+    root.classList.add('vintage');
   }
 }
 
