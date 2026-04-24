@@ -19,7 +19,7 @@ interface DayTabsProps {
 
 export function DayTabs({ active, onChange }: DayTabsProps) {
   return (
-    <div className="flex justify-center gap-2">
+    <div className="flex justify-center gap-1 sm:gap-2">
       {DAY_ORDER.map((day) => {
         const isActive = day === active;
         const label = es.schedule.days[DAY_KEYS[day]];
@@ -28,7 +28,7 @@ export function DayTabs({ active, onChange }: DayTabsProps) {
             key={day}
             onClick={() => onChange(day)}
             className={
-              'flex h-9 w-9 items-center justify-center rounded-full text-sm font-medium transition-colors ' +
+              'flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full text-xs sm:text-sm font-medium transition-colors ' +
               (isActive
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'border border-input bg-background text-muted-foreground hover:text-foreground')
