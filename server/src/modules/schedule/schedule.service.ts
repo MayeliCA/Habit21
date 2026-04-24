@@ -7,6 +7,17 @@ import { todayForTimezone } from '../../utils/date';
 
 const MAX_PER_DAY = 18;
 
+function hasOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
+  return aStart < bEnd && bStart < aEnd;
+}
+
+function formatOverlapDays(dayNumbers: number[]): string {
+  const names = dayNumbers.map((d) => FULL_DAYS[d]);
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} y ${names[1]}`;
+  return `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`;
+}
+
 const FULL_DAYS: Record<number, string> = {
   0: 'Domingo',
   1: 'Lunes',
@@ -95,6 +106,20 @@ export async function createActivity(req: Request, res: Response) {
     }
   }
 
+  const overlapDays: number[] = [];
+  for (const day of input.daysOfWeek) {
+    const existing = allActivities.filter((a) => a.daysOfWeek.includes(day));
+    if (existing.some((a) => hasOverlap(input.time, input.endTime, a.time, a.endTime))) {
+      overlapDays.push(day);
+    }
+  }
+
+  if (overlapDays.length > 0) {
+    return res.status(409).json({
+      error: `Ese horario se superpone con otra actividad existente el ${formatOverlapDays(overlapDays)}`,
+    });
+  }
+
   const [activity] = await db
     .insert(scheduleActivities)
     .values({
@@ -113,12 +138,40 @@ export async function createActivity(req: Request, res: Response) {
 
 export async function updateActivity(req: Request<{ id: string }>, res: Response) {
   const { id } = req.params;
+  const userId = req.user!.userId;
   const input = updateActivitySchema.parse(req.body);
+
+  const allActivities = await db.query.scheduleActivities.findMany({
+    where: eq(scheduleActivities.userId, userId),
+  });
+
+  const current = allActivities.find((a) => a.id === id);
+  if (!current) return res.status(404).json({ error: 'Activity not found' });
+
+  const effectiveDays = input.daysOfWeek ?? current.daysOfWeek;
+  const effectiveStart = input.time ?? current.time;
+  const effectiveEnd = input.endTime ?? current.endTime;
+
+  const overlapDays: number[] = [];
+  for (const day of effectiveDays) {
+    const existing = allActivities.filter(
+      (a) => a.id !== id && a.daysOfWeek.includes(day),
+    );
+    if (existing.some((a) => hasOverlap(effectiveStart, effectiveEnd, a.time, a.endTime))) {
+      overlapDays.push(day);
+    }
+  }
+
+  if (overlapDays.length > 0) {
+    return res.status(409).json({
+      error: `Ese horario se superpone con otra actividad existente el ${formatOverlapDays(overlapDays)}`,
+    });
+  }
 
   const [updated] = await db
     .update(scheduleActivities)
     .set(input)
-    .where(and(eq(scheduleActivities.id, id), eq(scheduleActivities.userId, req.user!.userId)))
+    .where(and(eq(scheduleActivities.id, id), eq(scheduleActivities.userId, userId)))
     .returning();
 
   if (!updated) return res.status(404).json({ error: 'Activity not found' });

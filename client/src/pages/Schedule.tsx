@@ -6,10 +6,55 @@ import type { ActivityWithLog } from '@shared/types/schedule';
 import { DayTabs } from '@/components/schedule/DayTabs';
 import { ActivityRow } from '@/components/schedule/ActivityRow';
 import { AddActivityForm } from '@/components/schedule/AddActivityForm';
-import { Rocket, ArrowDown } from 'lucide-react';
+import { Rocket, Plus, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToday } from '@/hooks/useToday';
 import { TimelineBar } from '@/components/schedule/TimelineBar';
+import { toast } from 'sonner';
+
+function hasOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
+  return aStart < bEnd && bStart < aEnd;
+}
+
+function formatOverlapDays(dayNumbers: number[]): string {
+  const names = dayNumbers.map((d) => es.schedule.fullDays[String(d)]);
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} y ${names[1]}`;
+  return `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`;
+}
+
+function timeToMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function calcCoveredHours(activities: ActivityWithLog[]): number {
+  let total = 0;
+  for (const a of activities) {
+    const start = timeToMinutes(a.time);
+    const end = a.endTime ? timeToMinutes(a.endTime) : start + 45;
+    total += end - start;
+  }
+  return total / 60;
+}
+
+type CoverageLevel = 'low' | 'light' | 'balanced' | 'heavy' | 'overload';
+
+const COVERAGE_MESSAGES: Record<CoverageLevel, string> = {
+  low: es.schedule.coverageLow,
+  light: es.schedule.coverageLight,
+  balanced: '',
+  heavy: es.schedule.coverageHeavy,
+  overload: es.schedule.coverageOverload,
+};
+
+function getCoverageLevel(hours: number): CoverageLevel {
+  if (hours < 5) return 'low';
+  if (hours < 8) return 'light';
+  if (hours < 13) return 'balanced';
+  if (hours < 16) return 'heavy';
+  return 'overload';
+}
 
 export default function Schedule() {
   const { user } = useAuth();
@@ -17,6 +62,7 @@ export default function Schedule() {
   const [activeDay, setActiveDay] = useState<number>(new Date(today + 'T12:00:00').getDay());
   const [allActivities, setAllActivities] = useState<ActivityWithLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mobileFormOpen, setMobileFormOpen] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,10 +81,27 @@ export default function Schedule() {
 
   const dayActivities = allActivities.filter((a) => a.daysOfWeek.includes(activeDay));
   const totalCount = dayActivities.length;
+  const coveredHours = calcCoveredHours(dayActivities);
+  const coverageLevel = getCoverageLevel(coveredHours);
 
-  const handleAdd = async (daysOfWeek: number[], time: string, endTime: string, category: Category, activity: string) => {
+  const handleAdd = async (daysOfWeek: number[], time: string, endTime: string, category: Category, activity: string): Promise<boolean> => {
+    const overlapDays: number[] = [];
+
+    for (const day of daysOfWeek) {
+      const existing = allActivities.filter((a) => a.daysOfWeek.includes(day));
+      const overlaps = existing.some((a) => hasOverlap(time, endTime, a.time, a.endTime));
+      if (overlaps) overlapDays.push(day);
+    }
+
+    if (overlapDays.length > 0) {
+      toast.error(es.schedule.scheduleOverlap.replace('{days}', formatOverlapDays(overlapDays)));
+      return false;
+    }
+
     await api.post('/schedule', { daysOfWeek, time, endTime, category, activity });
     await fetchActivities();
+    setMobileFormOpen(false);
+    return true;
   };
 
   const handleDelete = async (id: string) => {
@@ -68,27 +131,31 @@ export default function Schedule() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{es.schedule.title}</h1>
           <span className="text-xs text-muted-foreground">
-            {es.schedule.totalActivities.replace('{count}', String(totalCount))}
+            {es.schedule.hoursPlanned.replace('{hours}', coveredHours % 1 === 0 ? `${coveredHours}h` : `${coveredHours.toFixed(1)}h`)}
           </span>
         </div>
         <div className="mt-2">
           <div className="h-1 w-full overflow-hidden rounded-full bg-border">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                totalCount >= 17
-                  ? 'bg-red-500 animate-pulse'
-                  : totalCount >= 13
-                    ? 'bg-orange-500'
-                    : totalCount >= 6
-                      ? 'bg-amber-400'
-                      : 'bg-green-500'
+                coverageLevel === 'overload'
+                  ? 'bg-danger animate-pulse'
+                  : coverageLevel === 'heavy'
+                    ? 'bg-warning'
+                    : coverageLevel === 'balanced'
+                      ? 'bg-success'
+                      : coverageLevel === 'light'
+                        ? 'bg-warning'
+                        : 'bg-danger'
               }`}
-              style={{ width: `${Math.min((totalCount / 18) * 100, 100)}%` }}
+              style={{ width: `${Math.min((coveredHours / 18) * 100, 100)}%` }}
             />
           </div>
-          {totalCount >= 13 && (
-            <p className={`mt-1 text-xs font-medium ${totalCount >= 17 ? 'text-red-500' : 'text-orange-500'}`}>
-              {totalCount >= 18 ? es.schedule.capacityFull : es.schedule.capacityWarning}
+          {coverageLevel !== 'balanced' && dayActivities.length > 0 && (
+            <p className={`mt-1 text-xs font-medium ${
+              coverageLevel === 'overload' || coverageLevel === 'low' ? 'text-danger' : coverageLevel === 'heavy' ? 'text-warning' : 'text-warning-dark'
+            }`}>
+              {COVERAGE_MESSAGES[coverageLevel]}
             </p>
           )}
         </div>
@@ -132,9 +199,36 @@ export default function Schedule() {
         )}
       </div>
 
-      <div ref={formRef} className="shrink-0 rounded-xl border bg-card p-5 shadow-sm">
+      <div ref={formRef} className="shrink-0 rounded-xl border bg-card p-3 sm:p-5 shadow-sm hidden md:block">
         <AddActivityForm disabled={totalCount >= 18} onSubmit={handleAdd} />
       </div>
+
+      {totalCount < 18 && (
+        <button
+          onClick={() => setMobileFormOpen(true)}
+          className="fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95 md:hidden"
+        >
+          <Plus className="h-6 w-6" strokeWidth={2.5} />
+        </button>
+      )}
+
+      {mobileFormOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileFormOpen(false)} />
+          <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-card p-4 shadow-xl fade-in-up">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">{es.schedule.addActivity}</h2>
+              <button
+                onClick={() => setMobileFormOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-accent"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <AddActivityForm disabled={totalCount >= 18} onSubmit={handleAdd} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
