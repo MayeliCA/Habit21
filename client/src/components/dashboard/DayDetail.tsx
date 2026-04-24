@@ -1,29 +1,14 @@
 import { es } from '@/i18n/es';
-import { formatClockTime, formatTime } from '@/lib/format';
-import { useSettings } from '@/hooks/useSettings';
-import { BookOpen, Heart, Coffee, Gamepad2, Check, X } from 'lucide-react';
+import { formatTime } from '@/lib/format';
+import { Check, X } from 'lucide-react';
 import type { DayActivityDetail } from '@shared/types/analytics';
 import type { Category } from '@shared/types/enums';
 
-const CATEGORY_ICON: Record<Category, React.ElementType> = {
-  academic: BookOpen,
-  vital: Heart,
-  personal: Coffee,
-  escape: Gamepad2,
-};
-
 const CATEGORY_DOT: Record<Category, string> = {
-  academic: 'bg-blue-500',
-  vital: 'bg-green-500',
-  personal: 'bg-purple-500',
-  escape: 'bg-amber-500',
-};
-
-const CATEGORY_BADGE_BG: Record<Category, string> = {
-  academic: 'bg-blue-100 text-blue-700',
-  vital: 'bg-green-100 text-green-700',
-  personal: 'bg-purple-100 text-purple-700',
-  escape: 'bg-amber-100 text-amber-700',
+  academic: 'bg-academic',
+  vital: 'bg-vital',
+  personal: 'bg-personal',
+  escape: 'bg-escape',
 };
 
 interface DayDetailProps {
@@ -33,14 +18,12 @@ interface DayDetailProps {
 }
 
 export function DayDetail({ activities, loading, date }: DayDetailProps) {
-  const { settings } = useSettings();
-
   if (loading) {
     return (
       <div className="rounded-lg border bg-card p-4 shadow-sm">
         <div className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="skeleton h-8 w-full rounded" />
+            <div key={i} className="skeleton h-5 w-full rounded" />
           ))}
         </div>
       </div>
@@ -49,8 +32,8 @@ export function DayDetail({ activities, loading, date }: DayDetailProps) {
 
   if (activities.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center rounded-lg border bg-card p-6 shadow-sm">
-        <p className="text-sm text-muted-foreground">{es.dashboard.noActivitiesDay}</p>
+      <div className="flex items-center justify-center rounded-lg border bg-card p-4 shadow-sm">
+        <p className="text-xs text-muted-foreground">{es.dashboard.noActivitiesDay}</p>
       </div>
     );
   }
@@ -71,48 +54,43 @@ export function DayDetail({ activities, loading, date }: DayDetailProps) {
 
   return (
     <div className="flex h-full flex-col rounded-lg border bg-card shadow-sm">
-      <div className="flex items-center justify-between border-b px-4 py-2">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold">{es.dashboard.dayDetail}</span>
-          <span className="text-xs text-muted-foreground">
-            {doneCount}/{activities.length} {es.dashboard.activities}
+      <div className="flex items-center justify-between px-3 py-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-muted-foreground">{es.dashboard.dayDetail}</span>
+          <span className="text-[0.625rem] text-muted-foreground">
+            {doneCount}/{activities.length}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">{formatTime(doneMin)}/{formatTime(plannedMin)}</span>
-          <span className={`text-sm font-bold tabular-nums ${overallPct >= 80 ? 'text-green-600' : overallPct >= 50 ? 'text-amber-600' : 'text-red-500'}`}>
+          <span className="text-[0.625rem] text-muted-foreground">{formatTime(doneMin)}/{formatTime(plannedMin)}</span>
+          <span className={`text-xs font-bold tabular-nums ${overallPct >= 80 ? 'text-success-dark' : overallPct >= 50 ? 'text-warning-dark' : 'text-danger'}`}>
             {overallPct}%
           </span>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto px-2 py-1">
-        {activities.map((a) => {
-          const Icon = CATEGORY_ICON[a.category];
-          const shortLabel = es.categoryShort[a.category];
-          return (
-            <div
-              key={a.id}
-              className={`flex items-center gap-3 rounded-md px-2 py-2 transition-colors ${a.done ? 'bg-green-50 dark:bg-green-950/20' : ''}`}
-            >
-              <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${a.done ? 'bg-green-500' : 'bg-muted'}`}>
+      <div className="h-1 w-full bg-muted/50">
+        <div
+          className={`h-full transition-all duration-500 ${overallPct >= 80 ? 'bg-success' : overallPct >= 50 ? 'bg-warning' : 'bg-danger'}`}
+          style={{ width: `${Math.min(overallPct, 100)}%` }}
+        />
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-1.5 scrollbar-thin">
+        <div className="flex flex-col">
+          {activities.map((a) => (
+            <div key={a.id} className="flex items-center gap-2.5 py-1">
+              <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${a.done ? 'bg-success' : 'bg-muted'}`}>
                 {a.done
-                  ? <Check className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
-                  : <X className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2.5} />
+                  ? <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
+                  : <X className="h-2.5 w-2.5 text-muted-foreground" strokeWidth={3} />
                 }
               </div>
-              <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
-                {formatClockTime(a.time, settings.timeFormat)}–{formatClockTime(a.endTime, settings.timeFormat)}
-              </span>
-              <div className="flex shrink-0 items-center gap-1">
-                <div className={`h-2.5 w-2.5 rounded-full ${CATEGORY_DOT[a.category]}`} />
-                <Icon className={`h-3.5 w-3.5 ${CATEGORY_DOT[a.category].replace('bg-', 'text-')}`} strokeWidth={1.5} />
-              </div>
-              <span className={`flex-1 truncate text-sm ${a.done ? 'font-medium' : 'text-muted-foreground'}`}>
+              <span className={`h-2 w-2 shrink-0 rounded-full ${CATEGORY_DOT[a.category]}`} />
+              <span className={`flex-1 truncate text-xs ${a.done ? 'font-medium' : 'text-muted-foreground'}`}>
                 {a.activity}
               </span>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
     </div>
   );

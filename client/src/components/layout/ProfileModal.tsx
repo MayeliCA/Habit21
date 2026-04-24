@@ -18,7 +18,7 @@ export function ProfileModal({ open, onClose }: ProfileModalProps) {
     <div className="fixed inset-0 z-[60] flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
       <div
-        className="relative z-10 w-full max-w-md rounded-2xl bg-card p-6 shadow-lg fade-in-up"
+        className="relative z-10 mx-3 sm:mx-auto w-full max-w-md rounded-2xl bg-card p-4 sm:p-6 shadow-lg fade-in-up"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-6 flex flex-col items-center gap-3">
@@ -32,7 +32,7 @@ export function ProfileModal({ open, onClose }: ProfileModalProps) {
           <div className="flex items-center gap-3 rounded-xl border bg-muted/50 px-4 py-3">
             <User className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
             <div>
-              <p className="text-[10px] text-muted-foreground">{es.profile.name}</p>
+              <p className="text-[0.625rem] text-muted-foreground">{es.profile.name}</p>
               <p className="text-sm font-medium">{user.name}</p>
             </div>
           </div>
@@ -40,7 +40,7 @@ export function ProfileModal({ open, onClose }: ProfileModalProps) {
           <div className="flex items-center gap-3 rounded-xl border bg-muted/50 px-4 py-3">
             <Mail className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
             <div>
-              <p className="text-[10px] text-muted-foreground">{es.profile.email}</p>
+              <p className="text-[0.625rem] text-muted-foreground">{es.profile.email}</p>
               <p className="text-sm font-medium">{user.email}</p>
             </div>
           </div>
@@ -48,7 +48,7 @@ export function ProfileModal({ open, onClose }: ProfileModalProps) {
           <div className="flex items-center gap-3 rounded-xl border bg-muted/50 px-4 py-3">
             <Calendar className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
             <div>
-              <p className="text-[10px] text-muted-foreground">{es.profile.memberSince}</p>
+              <p className="text-[0.625rem] text-muted-foreground">{es.profile.memberSince}</p>
               <p className="text-sm font-medium">2025</p>
             </div>
           </div>
