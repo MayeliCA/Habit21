@@ -8,12 +8,15 @@ import {
 } from 'recharts';
 import type { StreakAttempt } from '@shared/types/streak';
 import { es } from '@/i18n/es';
+import { useSettings } from '@/hooks/useSettings';
 
 interface StreakProgressChartProps {
   attempts: StreakAttempt[];
 }
 
 export function StreakProgressChart({ attempts }: StreakProgressChartProps) {
+  const { settings } = useSettings();
+  const chartColor = settings.theme === 'vintage' ? '#547792' : '#3b82f6';
   if (attempts.length < 2) return null;
 
   const data = attempts.map((a) => ({
@@ -34,9 +37,9 @@ export function StreakProgressChart({ attempts }: StreakProgressChartProps) {
           <Line
             type="monotone"
             dataKey="days"
-            stroke="#3b82f6"
+            stroke={chartColor}
             strokeWidth={2}
-            dot={{ r: 3.5, fill: '#3b82f6' }}
+            dot={{ r: 3.5, fill: chartColor }}
             activeDot={{ r: 5 }}
           />
         </LineChart>

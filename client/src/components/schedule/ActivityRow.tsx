@@ -17,10 +17,10 @@ import {
 } from '@/components/ui/alert-dialog';
 
 const CATEGORY_COLORS: Record<Category, { border: string; icon: string; dot: string }> = {
-  academic: { border: 'border-l-blue-500', icon: 'text-blue-500', dot: 'bg-blue-500' },
-  vital: { border: 'border-l-green-500', icon: 'text-green-500', dot: 'bg-green-500' },
-  personal: { border: 'border-l-purple-500', icon: 'text-purple-500', dot: 'bg-purple-500' },
-  escape: { border: 'border-l-amber-500', icon: 'text-amber-500', dot: 'bg-amber-500' },
+  academic: { border: 'border-l-academic', icon: 'text-academic', dot: 'bg-academic' },
+  vital: { border: 'border-l-vital', icon: 'text-vital', dot: 'bg-vital' },
+  personal: { border: 'border-l-personal', icon: 'text-personal', dot: 'bg-personal' },
+  escape: { border: 'border-l-escape', icon: 'text-escape', dot: 'bg-escape' },
 };
 
 const CATEGORY_ICON: Record<Category, React.ElementType> = {
@@ -50,7 +50,7 @@ export function ActivityRow({ item, onDelete }: ActivityRowProps) {
         </div>
 
         <div className={`ml-3 flex flex-1 items-center gap-3 rounded-xl border border-l-[3px] bg-card py-3 pr-4 pl-4 shadow-sm transition-shadow hover:shadow-md ${colors.border}`}>
-          <span className="shrink-0 whitespace-nowrap text-sm font-mono text-muted-foreground">
+          <span className="shrink-0 whitespace-nowrap text-xs sm:text-sm font-mono text-muted-foreground">
             {formatClockTime(item.time, settings.timeFormat)}{item.endTime ? `–${formatClockTime(item.endTime, settings.timeFormat)}` : ''}
           </span>
 
@@ -62,7 +62,7 @@ export function ActivityRow({ item, onDelete }: ActivityRowProps) {
 
           <button
             onClick={() => setConfirmOpen(true)}
-            className="rounded p-1 text-muted-foreground/40 transition-colors hover:bg-red-500/10 hover:text-red-500"
+            className="rounded p-1 text-muted-foreground/40 transition-colors hover:bg-danger/10 hover:text-danger"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -72,8 +72,8 @@ export function ActivityRow({ item, onDelete }: ActivityRowProps) {
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
-              <AlertTriangle className="h-6 w-6 text-red-500" />
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-danger/10">
+              <AlertTriangle className="h-6 w-6 text-danger" />
             </div>
             <AlertDialogTitle>{es.schedule.confirmDelete}</AlertDialogTitle>
             <AlertDialogDescription>
@@ -84,7 +84,7 @@ export function ActivityRow({ item, onDelete }: ActivityRowProps) {
             <AlertDialogCancel>{es.schedule.cancelDelete}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => onDelete(item.id)}
-              className="rounded-full bg-red-500 px-6 text-white hover:bg-red-600"
+              className="rounded-full bg-danger px-6 text-white hover:bg-danger/90"
             >
               {es.schedule.deleteActivity}
             </AlertDialogAction>

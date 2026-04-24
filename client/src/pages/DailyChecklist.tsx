@@ -19,17 +19,17 @@ const CATEGORY_ICON: Record<Category, React.ElementType> = {
 };
 
 const CATEGORY_ICON_COLOR: Record<Category, string> = {
-  academic: 'text-blue-500',
-  vital: 'text-green-500',
-  personal: 'text-purple-500',
-  escape: 'text-amber-500',
+  academic: 'text-academic',
+  vital: 'text-vital',
+  personal: 'text-personal',
+  escape: 'text-escape',
 };
 
 const CATEGORY_DOT: Record<Category, string> = {
-  academic: 'bg-blue-500',
-  vital: 'bg-green-500',
-  personal: 'bg-purple-500',
-  escape: 'bg-amber-500',
+  academic: 'bg-academic',
+  vital: 'bg-vital',
+  personal: 'bg-personal',
+  escape: 'bg-escape',
 };
 
 export default function DailyChecklist() {
@@ -89,7 +89,9 @@ export default function DailyChecklist() {
         particleCount: 100,
         spread: 80,
         origin: { x, y },
-        colors: ['#22c55e', '#16a34a', '#fbbf24', '#3b82f6', '#a855f7'],
+        colors: settings.theme === 'vintage'
+          ? ['#547792', '#94B4C1', '#b89b7a', '#5a8f7a', '#EAE0CF']
+          : ['#22c55e', '#16a34a', '#fbbf24', '#3b82f6', '#a855f7'],
       });
       setTimeout(() => {
         confetti({ particleCount: 50, angle: 60, spread: 60, origin: { x: 0, y: 0.7 } });
@@ -151,7 +153,7 @@ export default function DailyChecklist() {
                       onChange={() => toggleDone(a.id)}
                       className="h-5 w-5 shrink-0 rounded border-gray-300 accent-primary cursor-pointer"
                     />
-                    <span className={`shrink-0 whitespace-nowrap text-sm font-mono ${isDone ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}>
+                    <span className={`shrink-0 whitespace-nowrap text-xs sm:text-sm font-mono ${isDone ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}>
                       {formatClockTime(a.time, settings.timeFormat)}{a.endTime ? `–${formatClockTime(a.endTime, settings.timeFormat)}` : ''}
                     </span>
                     <Icon className={`h-4 w-4 shrink-0 ${CATEGORY_ICON_COLOR[a.category]}`} strokeWidth={1.5} />

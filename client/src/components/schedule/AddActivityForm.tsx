@@ -6,10 +6,10 @@ import { useSettings } from '@/hooks/useSettings';
 const CATEGORY_OPTIONS: Category[] = ['academic', 'vital', 'personal', 'escape'];
 
 const CATEGORY_CONFIG: Record<Category, { color: string; bg: string; dot: string }> = {
-  vital: { color: 'text-green-700', bg: 'bg-green-50', dot: 'bg-green-500' },
-  academic: { color: 'text-blue-700', bg: 'bg-blue-50', dot: 'bg-blue-500' },
-  personal: { color: 'text-purple-700', bg: 'bg-purple-50', dot: 'bg-purple-500' },
-  escape: { color: 'text-amber-700', bg: 'bg-amber-50', dot: 'bg-amber-500' },
+  vital: { color: 'text-vital-dark', bg: 'bg-vital-light', dot: 'bg-vital' },
+  academic: { color: 'text-academic-dark', bg: 'bg-academic-light', dot: 'bg-academic' },
+  personal: { color: 'text-personal-dark', bg: 'bg-personal-light', dot: 'bg-personal' },
+  escape: { color: 'text-escape-dark', bg: 'bg-escape-light', dot: 'bg-escape' },
 };
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DAY_KEYS: Record<number, keyof typeof es.schedule.days> = {
@@ -101,7 +101,7 @@ function TimeInput12h({ hour, minute, period, onChangeHour, onChangeMinute, onCh
 
 interface AddActivityFormProps {
   disabled: boolean;
-  onSubmit: (daysOfWeek: number[], time: string, endTime: string, category: Category, activity: string) => void;
+  onSubmit: (daysOfWeek: number[], time: string, endTime: string, category: Category, activity: string) => Promise<boolean>;
 }
 
 export function AddActivityForm({ disabled, onSubmit }: AddActivityFormProps) {
@@ -129,13 +129,14 @@ export function AddActivityForm({ disabled, onSubmit }: AddActivityFormProps) {
   const getStartTime = () => (is12h ? to24h(startHour, startMinute, startPeriod) : startTime24);
   const getEndTime = () => (is12h ? to24h(endHour, endMinute, endPeriod) : endTime24);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const st = getStartTime();
     const et = getEndTime();
     if (!st || !et || !activity.trim() || daysOfWeek.length === 0) return;
     if (st >= et) return;
-    onSubmit(daysOfWeek, st, et, category, activity.trim());
+    const ok = await onSubmit(daysOfWeek, st, et, category, activity.trim());
+    if (!ok) return;
     setStartTime24('');
     setEndTime24('');
     setStartHour(8);
@@ -161,7 +162,7 @@ export function AddActivityForm({ disabled, onSubmit }: AddActivityFormProps) {
         <label className="text-xs font-medium text-muted-foreground">
           {es.schedule.selectDays}
         </label>
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2">
           {DAY_ORDER.map((day) => {
             const active = daysOfWeek.includes(day);
             return (
@@ -170,7 +171,7 @@ export function AddActivityForm({ disabled, onSubmit }: AddActivityFormProps) {
                 type="button"
                 onClick={() => toggleDay(day)}
                 className={
-                  'flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-colors ' +
+                  'flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full text-xs font-medium transition-colors ' +
                   (active
                     ? 'bg-primary text-primary-foreground'
                     : 'border border-border bg-muted text-muted-foreground hover:border-border hover:bg-accent')
@@ -183,7 +184,7 @@ export function AddActivityForm({ disabled, onSubmit }: AddActivityFormProps) {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-end gap-2">
+      <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-end md:gap-2">
         {is12h ? (
           <>
             <div className="space-y-1">
@@ -226,7 +227,7 @@ export function AddActivityForm({ disabled, onSubmit }: AddActivityFormProps) {
                 value={startTime24}
                 onChange={(e) => setStartTime24(e.target.value)}
                 disabled={disabled}
-                className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
               />
             </div>
             <div className="space-y-1">
@@ -238,12 +239,12 @@ export function AddActivityForm({ disabled, onSubmit }: AddActivityFormProps) {
                 value={endTime24}
                 onChange={(e) => setEndTime24(e.target.value)}
                 disabled={disabled}
-                className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
               />
             </div>
           </>
         )}
-        <div className="space-y-1">
+        <div className="col-span-2 space-y-1 md:col-span-1">
           <label className="text-xs font-medium text-muted-foreground">
             {es.schedule.category}
           </label>
@@ -269,7 +270,7 @@ export function AddActivityForm({ disabled, onSubmit }: AddActivityFormProps) {
             })}
           </div>
         </div>
-        <div className="min-w-[180px] flex-1 space-y-1">
+        <div className="col-span-2 md:col-span-1 min-w-0 md:min-w-[7.5rem] sm:md:min-w-[11.25rem] md:flex-1 space-y-1">
           <label className="text-xs font-medium text-muted-foreground">
             {es.schedule.activity}
           </label>
@@ -283,13 +284,15 @@ export function AddActivityForm({ disabled, onSubmit }: AddActivityFormProps) {
             className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
           />
         </div>
-        <button
-          type="submit"
-          disabled={disabled || !canSubmit()}
-          className="rounded-xl bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-[0_0_12px_rgba(30,41,59,0.15)] hover:bg-primary/90 disabled:opacity-50"
-        >
-          {es.schedule.addActivity}
-        </button>
+        <div className="col-span-2 md:col-span-1 flex md:block">
+          <button
+            type="submit"
+            disabled={disabled || !canSubmit()}
+            className="w-full rounded-xl bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-[0_0_12px_rgba(30,41,59,0.15)] hover:bg-primary/90 disabled:opacity-50"
+          >
+            {es.schedule.addActivity}
+          </button>
+        </div>
       </div>
     </form>
   );

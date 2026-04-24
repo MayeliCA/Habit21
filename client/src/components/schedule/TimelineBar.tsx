@@ -10,10 +10,10 @@ const RANGE_END = 23;
 const RANGE_HOURS = RANGE_END - RANGE_START;
 
 const CATEGORY_COLORS: Record<Category, { bg: string; hover: string }> = {
-  academic: { bg: 'bg-blue-500', hover: 'hover:bg-blue-400' },
-  vital: { bg: 'bg-green-500', hover: 'hover:bg-green-400' },
-  personal: { bg: 'bg-purple-500', hover: 'hover:bg-purple-400' },
-  escape: { bg: 'bg-amber-500', hover: 'hover:bg-amber-400' },
+  academic: { bg: 'bg-academic', hover: 'hover:bg-academic/80' },
+  vital: { bg: 'bg-vital', hover: 'hover:bg-vital/80' },
+  personal: { bg: 'bg-personal', hover: 'hover:bg-personal/80' },
+  escape: { bg: 'bg-escape', hover: 'hover:bg-escape/80' },
 };
 
 const HOUR_MARKS = [5, 8, 11, 14, 17, 20, 23];
@@ -95,7 +95,7 @@ export function TimelineBar({ activities }: TimelineBarProps) {
                 className="absolute top-full"
                 style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
               >
-                <span className="text-[9px] leading-none text-muted-foreground/60">
+                <span className="text-[0.5625rem] leading-none text-muted-foreground/60">
                   {String(h).padStart(2, '0')}
                 </span>
               </div>

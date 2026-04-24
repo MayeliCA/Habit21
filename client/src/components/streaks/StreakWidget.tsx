@@ -11,7 +11,7 @@ function isMilestone(day: number): boolean {
   return MILESTONES.has(day);
 }
 
-function fireCelebration(ref: React.RefObject<HTMLButtonElement | null>) {
+function fireCelebration(ref: React.RefObject<HTMLButtonElement | null>, colors?: string[]) {
   const rect = ref.current?.getBoundingClientRect();
   const x = rect ? (rect.left + rect.width / 2) / window.innerWidth : 0.5;
   const y = rect ? (rect.top + rect.height / 2) / window.innerHeight : 0.5;
@@ -19,7 +19,7 @@ function fireCelebration(ref: React.RefObject<HTMLButtonElement | null>) {
     particleCount: 80,
     spread: 70,
     origin: { x, y },
-    colors: ['#fbbf24', '#f59e0b', '#ef4444', '#3b82f6', '#22c55e'],
+    colors: colors ?? ['#fbbf24', '#f59e0b', '#ef4444', '#3b82f6', '#22c55e'],
   });
   setTimeout(() => {
     confetti({
@@ -59,14 +59,17 @@ export function StreakWidget({ streakPreview, onLogToday }: StreakWidgetProps) {
     const day = streak.currentDay;
     if (isMilestone(day) && isActive && !celebratedDays.has(day)) {
       setCelebratedDays((prev) => new Set(prev).add(day));
-      fireCelebration(btnRef);
+      const confettiColors = settings.theme === 'vintage'
+        ? ['#547792', '#94B4C1', '#b89b7a', '#5a8f7a', '#EAE0CF']
+        : undefined;
+      fireCelebration(btnRef, confettiColors);
     }
   }, [streak.currentDay, isActive, celebratedDays, settings.celebrationsEnabled]);
 
   const barColor = isCompleted
-    ? 'bg-green-500'
+    ? 'bg-success'
     : streak.status === 'failed'
-      ? 'bg-red-500'
+      ? 'bg-danger'
       : 'bg-primary';
 
   const handleClick = () => {
@@ -82,12 +85,12 @@ export function StreakWidget({ streakPreview, onLogToday }: StreakWidgetProps) {
     <div className="flex flex-1 flex-col justify-between px-3">
       <div className="flex justify-center pt-1">
         {isCompleted ? (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-warning-light px-2 py-0.5 text-[0.625rem] font-medium text-warning-dark">
             <Crown className="h-3 w-3" />
             {es.streak.mastered}
           </span>
         ) : (
-          <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-medium text-primary">
+          <span className="inline-flex items-center rounded-full bg-academic-light px-2 py-0.5 text-[0.5625rem] font-medium text-primary">
             {es.streak.dayOf.replace('{current}', String(streak.currentDay))}
           </span>
         )}
@@ -100,9 +103,9 @@ export function StreakWidget({ streakPreview, onLogToday }: StreakWidgetProps) {
           disabled={!canLogToday}
           className={`group/fire relative flex h-14 w-14 items-center justify-center rounded-full transition-all duration-300 ${
             isActive
-              ? 'bg-gradient-to-br from-orange-400 to-red-500 shadow-md fire-glow drop-shadow-[0_0_10px_rgba(251,146,60,0.45)]'
+              ? 'bg-gradient-to-br from-warning to-danger shadow-md fire-glow drop-shadow-[0_0_10px_rgba(251,146,60,0.45)]'
               : canLogToday
-                ? 'cursor-pointer bg-muted drop-shadow-[0_0_6px_rgba(0,0,0,0.06)] hover:bg-amber-500/10 hover:shadow-[0_0_18px_rgba(251,146,60,0.35)]'
+                ? 'cursor-pointer bg-muted drop-shadow-[0_0_6px_rgba(0,0,0,0.06)] hover:bg-warning/10 hover:shadow-[0_0_18px_rgba(251,146,60,0.35)]'
                 : 'bg-muted'
           } ${igniting ? 'fire-ignite' : ''}`}
         >
@@ -111,27 +114,27 @@ export function StreakWidget({ streakPreview, onLogToday }: StreakWidgetProps) {
               isActive
                 ? 'text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.5)]'
                 : canLogToday
-                  ? 'text-muted-foreground/40 group-hover/fire:text-amber-500'
+                  ? 'text-muted-foreground/40 group-hover/fire:text-warning'
                   : 'text-muted-foreground/40'
             }`}
             strokeWidth={2.5}
           />
           {showSparks && (
             <div className="spark-container absolute inset-0 flex items-center justify-center">
-              <span className="spark-1 absolute h-2 w-2 rounded-full bg-orange-400" />
-              <span className="spark-2 absolute h-1.5 w-1.5 rounded-full bg-yellow-400" />
-              <span className="spark-3 absolute h-1.5 w-1.5 rounded-full bg-amber-500" />
+              <span className="spark-1 absolute h-2 w-2 rounded-full bg-warning" />
+              <span className="spark-2 absolute h-1.5 w-1.5 rounded-full bg-warning-light" />
+              <span className="spark-3 absolute h-1.5 w-1.5 rounded-full bg-warning" />
             </div>
           )}
         </button>
         {canLogToday && (
-          <span className="text-[10px] text-muted-foreground">{es.streak.lightUp}</span>
+          <span className="text-[0.625rem] text-muted-foreground">{es.streak.lightUp}</span>
         )}
         {isActive && !isCompleted && (
-          <span className="text-[10px] font-medium text-orange-500">{es.streak.lit}</span>
+          <span className="text-[0.625rem] font-medium text-warning-dark">{es.streak.lit}</span>
         )}
         {isCompleted && (
-          <span className="text-[10px] font-medium text-green-600">{es.streak.completed}</span>
+          <span className="text-[0.625rem] font-medium text-success-dark">{es.streak.completed}</span>
         )}
       </div>
 
@@ -142,7 +145,7 @@ export function StreakWidget({ streakPreview, onLogToday }: StreakWidgetProps) {
             style={{ width: `${progress}%` }}
           />
         </div>
-        <Trophy className={`h-3 w-3 shrink-0 ${isCompleted ? 'text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.6)]' : 'text-muted-foreground/30 opacity-50'}`} />
+        <Trophy className={`h-3 w-3 shrink-0 ${isCompleted ? 'text-warning drop-shadow-[0_0_4px_rgba(251,191,36,0.6)]' : 'text-muted-foreground/30 opacity-50'}`} />
       </div>
     </div>
   );

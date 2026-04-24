@@ -21,10 +21,10 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 const MAX_HABITS = 6;
 
 const CATEGORY_CONFIG: Record<Category, { color: string; bg: string; dot: string }> = {
-  vital: { color: 'text-green-700', bg: 'bg-green-50', dot: 'bg-green-500' },
-  academic: { color: 'text-blue-700', bg: 'bg-blue-50', dot: 'bg-blue-500' },
-  personal: { color: 'text-purple-700', bg: 'bg-purple-50', dot: 'bg-purple-500' },
-  escape: { color: 'text-amber-700', bg: 'bg-amber-50', dot: 'bg-amber-500' },
+  vital: { color: 'text-vital-dark', bg: 'bg-vital-light', dot: 'bg-vital' },
+  academic: { color: 'text-academic-dark', bg: 'bg-academic-light', dot: 'bg-academic' },
+  personal: { color: 'text-personal-dark', bg: 'bg-personal-light', dot: 'bg-personal' },
+  escape: { color: 'text-escape-dark', bg: 'bg-escape-light', dot: 'bg-escape' },
 };
 
 const CATEGORIES: Category[] = ['vital', 'academic', 'personal'];
@@ -89,8 +89,8 @@ export default function Habits() {
   const emptySlots = isAtLimit ? 0 : MAX_HABITS - habits.length;
 
   const creationBar = isAtLimit ? (
-    <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-amber-500/20 dark:bg-amber-500/10 px-4 py-2 text-center">
-      <p className="text-xs text-amber-700">{es.habits.limitReached}</p>
+    <div className="rounded-xl border border-warning-light bg-warning-light/50 dark:border-warning/20 dark:bg-warning/10 px-4 py-2 text-center">
+      <p className="text-xs text-warning-dark">{es.habits.limitReached}</p>
     </div>
   ) : (
     <div className="rounded-xl border bg-card px-4 py-3 shadow-sm">
@@ -117,7 +117,7 @@ export default function Habits() {
                   key={cat}
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium transition-all ${
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.625rem] font-medium transition-all ${
                     isSelected
                       ? `${cfg.bg} ${cfg.color} ring-1 ring-current/20`
                       : 'text-muted-foreground hover:bg-muted'
@@ -150,7 +150,7 @@ export default function Habits() {
 
   if (!isDataReady) {
     return (
-      <div className="flex h-[calc(100vh-7.5rem)] flex-col gap-3 overflow-hidden page-fade-in">
+      <div className="flex h-[calc(100vh-7.5rem)] flex-col gap-3 overflow-y-auto md:overflow-hidden page-fade-in">
         <div className="skeleton h-7 w-32 rounded-lg" />
         <div className="skeleton h-10 w-full rounded-xl" />
         <div className="grid flex-1 gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
@@ -164,7 +164,7 @@ export default function Habits() {
 
   if (habits.length === 0) {
     return (
-      <div className="flex h-[calc(100vh-7.5rem)] flex-col gap-4 overflow-hidden">
+      <div className="flex h-[calc(100vh-7.5rem)] flex-col gap-4 overflow-y-auto md:overflow-hidden">
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-bold">{es.habits.title}</h1>
           <Popover open={infoOpen} onOpenChange={setInfoOpen}>
@@ -257,8 +257,8 @@ export default function Habits() {
   const totalCount = habits.length + emptySlots;
 
   return (
-    <div className="flex h-[calc(100vh-7.5rem)] flex-col gap-3 overflow-hidden page-fade-in">
-      <div className="flex items-center gap-2">
+    <div className="flex h-[calc(100vh-7.5rem)] flex-col gap-3 overflow-y-auto md:overflow-hidden page-fade-in">
+      <div className="flex items-center gap-2 shrink-0">
         <h1 className="text-xl font-bold">{es.habits.title}</h1>
         <Popover open={infoOpen} onOpenChange={setInfoOpen}>
           <PopoverTrigger asChild>
@@ -274,9 +274,9 @@ export default function Habits() {
         </Popover>
       </div>
 
-      {creationBar}
+      <div className="shrink-0">{creationBar}</div>
 
-      <div className="grid flex-1 gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" style={{ gridAutoRows: `minmax(0, calc((100% - 1rem) / ${Math.ceil(totalCount / 3)}))` }}>
+      <div className="grid flex-1 gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
         {habits.map((habit) => {
           const streakData = streaks.find((s) => s.habit.id === habit.id);
           const hasActiveStreak = streakData?.streak;
@@ -295,23 +295,23 @@ export default function Habits() {
                   <h3 className="line-clamp-2 flex-1 text-base font-semibold tracking-tight leading-tight">
                     {habit.title}
                     {streakData?.streak?.streak.status === 'completed' && (
-                      <Crown className="ml-0.5 inline h-3.5 w-3.5 shrink-0 text-amber-500" />
+                      <Crown className="ml-0.5 inline h-3.5 w-3.5 shrink-0 text-warning" />
                     )}
                   </h3>
                   <div className="flex shrink-0 items-center gap-1 pt-0.5">
-                    <span className={`inline-flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-[10px] font-medium ${catCfg.bg} ${catCfg.color} border-current/10`}>
+                    <span className={`inline-flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-[0.625rem] font-medium ${catCfg.bg} ${catCfg.color} border-current/10`}>
                       <span className={`inline-block h-1.5 w-1.5 rounded-full ${catCfg.dot}`} />
                       {es.categoryShort[habit.category]}
                     </span>
                     <button
                       onClick={() => setHistoryTarget({ id: habit.id, title: habit.title })}
-                      className="rounded p-0.5 text-transparent group-hover:text-muted-foreground/40 transition-colors hover:!bg-blue-500/10 hover:!text-blue-500"
+                      className="rounded p-0.5 text-muted-foreground/40 md:text-transparent md:group-hover:text-muted-foreground/40 transition-colors hover:!bg-academic/10 hover:!text-academic"
                     >
                       <BarChart3 className="h-3 w-3" />
                     </button>
                     <button
                       onClick={() => setDeleteTarget(habit)}
-                      className="rounded p-0.5 text-transparent group-hover:text-muted-foreground/40 transition-colors hover:!bg-red-500/10 hover:!text-red-500"
+                      className="rounded p-0.5 text-muted-foreground/40 md:text-transparent md:group-hover:text-muted-foreground/40 transition-colors hover:!bg-danger/10 hover:!text-danger"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
@@ -329,12 +329,12 @@ export default function Habits() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted drop-shadow-sm">
                     <Flame className="h-5 w-5 text-muted-foreground/40" strokeWidth={2} />
                   </div>
-                  <p className="text-center text-[10px] text-muted-foreground">
+                  <p className="text-center text-[0.625rem] text-muted-foreground">
                     {es.streak.motivationalRestart}
                   </p>
                   <button
                     onClick={() => handleStartStreak(habit.id)}
-                    className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1 text-[10px] font-semibold text-primary-foreground transition-colors hover:bg-primary/80"
+                    className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1 text-[0.625rem] font-semibold text-primary-foreground transition-colors hover:bg-primary/80"
                   >
                     <RotateCcw className="h-2.5 w-2.5" />
                     {es.streak.restartStreak}
@@ -345,12 +345,12 @@ export default function Habits() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted drop-shadow-sm">
                     <Flame className="h-5 w-5 text-muted-foreground/40" strokeWidth={1.5} />
                   </div>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-[0.625rem] text-muted-foreground">
                     {es.streak.firstVictory}
                   </p>
                   <button
                     onClick={() => handleStartStreak(habit.id)}
-                    className="pulse-soft rounded-lg bg-primary px-3 py-1 text-[10px] font-semibold text-primary-foreground transition-colors hover:bg-primary/80"
+                    className="pulse-soft rounded-lg bg-primary px-3 py-1 text-[0.625rem] font-semibold text-primary-foreground transition-colors hover:bg-primary/80"
                   >
                     {es.streak.startStreak}
                   </button>
@@ -373,8 +373,8 @@ export default function Habits() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
-              <AlertTriangle className="h-6 w-6 text-red-500" />
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-danger/10">
+              <AlertTriangle className="h-6 w-6 text-danger" />
             </div>
             <AlertDialogTitle>{es.habits.deleteConfirmTitle}</AlertDialogTitle>
             <AlertDialogDescription>{es.habits.deleteConfirmDesc}</AlertDialogDescription>
@@ -383,7 +383,7 @@ export default function Habits() {
             <AlertDialogCancel>{es.common.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="rounded-full bg-red-500 px-6 text-white hover:bg-red-600"
+              className="rounded-full bg-danger px-6 text-white hover:bg-danger/90"
             >
               {es.habits.delete}
             </AlertDialogAction>

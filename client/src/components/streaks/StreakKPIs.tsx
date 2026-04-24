@@ -7,10 +7,10 @@ interface StreakKPIsProps {
 }
 
 const KPI_ITEMS = [
-  { key: 'bestStreak', icon: Trophy, color: 'text-amber-500', colorBg: 'bg-amber-50' },
-  { key: 'totalAttempts', icon: Target, color: 'text-blue-500', colorBg: 'bg-blue-50' },
-  { key: 'recoveryRate', icon: RotateCcw, color: 'text-purple-500', colorBg: 'bg-purple-50' },
-  { key: 'avgDaysBeforeFail', icon: TrendingDown, color: 'text-red-500', colorBg: 'bg-red-50' },
+  { key: 'bestStreak', icon: Trophy, color: 'text-warning', colorBg: 'bg-warning-light' },
+  { key: 'totalAttempts', icon: Target, color: 'text-academic', colorBg: 'bg-academic-light' },
+  { key: 'recoveryRate', icon: RotateCcw, color: 'text-personal', colorBg: 'bg-personal-light' },
+  { key: 'avgDaysBeforeFail', icon: TrendingDown, color: 'text-danger', colorBg: 'bg-danger-light' },
 ] as const;
 
 function getValue(history: StreakHistory, key: string): string {
@@ -31,12 +31,12 @@ function getLabel(key: string): string {
 
 export function StreakKPIs({ history }: StreakKPIsProps) {
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
       {KPI_ITEMS.map(({ key, icon: Icon, color, colorBg }) => (
-        <div key={key} className={`flex flex-col items-center gap-1.5 rounded-lg ${colorBg} px-3 py-3`}>
+        <div key={key} className={`flex flex-col items-center gap-1.5 rounded-lg ${colorBg} px-2 py-2 sm:px-3 sm:py-3`}>
           <Icon className={`h-4 w-4 ${color}`} />
           <span className="text-base font-bold leading-none">{getValue(history, key)}</span>
-          <span className="text-[10px] text-muted-foreground leading-tight text-center">{getLabel(key)}</span>
+          <span className="text-[0.625rem] text-muted-foreground leading-tight text-center">{getLabel(key)}</span>
         </div>
       ))}
     </div>

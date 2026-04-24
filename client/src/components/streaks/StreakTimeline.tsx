@@ -7,10 +7,10 @@ interface StreakTimelineProps {
 }
 
 function getStatusConfig(status: StreakAttempt['status'], isBest: boolean) {
-  if (status === 'completed') return { barClass: 'bg-green-500', label: es.streakHistory.completed, labelClass: 'text-green-600' };
-  if (status === 'active') return { barClass: 'bg-blue-500', label: es.streakHistory.active, labelClass: 'text-blue-600' };
-  if (isBest) return { barClass: 'bg-amber-500', label: `${es.streakHistory.failed} ★`, labelClass: 'text-amber-600' };
-  return { barClass: 'bg-red-400', label: es.streakHistory.failed, labelClass: 'text-red-500' };
+  if (status === 'completed') return { barClass: 'bg-success', label: es.streakHistory.completed, labelClass: 'text-success-dark' };
+  if (status === 'active') return { barClass: 'bg-academic', label: es.streakHistory.active, labelClass: 'text-academic-dark' };
+  if (isBest) return { barClass: 'bg-warning', label: `${es.streakHistory.failed} ★`, labelClass: 'text-warning-dark' };
+  return { barClass: 'bg-danger', label: es.streakHistory.failed, labelClass: 'text-danger' };
 }
 
 export function StreakTimeline({ attempts, bestStreak }: StreakTimelineProps) {
@@ -28,7 +28,7 @@ export function StreakTimeline({ attempts, bestStreak }: StreakTimelineProps) {
 
           return (
             <div key={attempt.attemptNumber} className="flex items-center gap-2">
-              <span className="w-14 shrink-0 text-right text-[10px] text-muted-foreground">
+              <span className="w-14 shrink-0 text-right text-[0.625rem] text-muted-foreground">
                 #{attempt.attemptNumber}
               </span>
               <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
@@ -37,8 +37,8 @@ export function StreakTimeline({ attempts, bestStreak }: StreakTimelineProps) {
                   style={{ width: `${widthPct}%` }}
                 />
               </div>
-              <span className="w-8 shrink-0 text-[10px] font-medium text-right">{attempt.currentDay}d</span>
-              <span className={`w-16 shrink-0 text-right text-[10px] font-medium ${config.labelClass}`}>
+              <span className="w-8 shrink-0 text-[0.625rem] font-medium text-right">{attempt.currentDay}d</span>
+              <span className={`w-16 shrink-0 text-right text-[0.625rem] font-medium ${config.labelClass}`}>
                 {config.label}
               </span>
             </div>

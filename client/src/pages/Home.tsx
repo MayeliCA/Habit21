@@ -15,10 +15,10 @@ import { useToday } from '@/hooks/useToday';
 import { formatClockTime } from '@/lib/format';
 
 const CATEGORY_COLORS: Record<Category, string> = {
-  academic: 'bg-blue-100 text-blue-800',
-  vital: 'bg-green-100 text-green-800',
-  personal: 'bg-purple-100 text-purple-800',
-  escape: 'bg-amber-100 text-amber-800',
+  academic: 'bg-academic-light text-academic-dark',
+  vital: 'bg-vital-light text-vital-dark',
+  personal: 'bg-personal-light text-personal-dark',
+  escape: 'bg-escape-light text-escape-dark',
 };
 
 function getNextActivity(activities: ActivityWithLog[]): ActivityWithLog | null {
@@ -59,7 +59,7 @@ function NextActivityCard({ activities }: { activities: ActivityWithLog[] }) {
             {es.home.nextActivity}
           </p>
           {allDone ? (
-            <p className="mt-2 text-lg font-semibold text-green-600">
+            <p className="mt-2 text-lg font-semibold text-success-dark">
               {es.home.allDone}
             </p>
           ) : noActivities ? (
@@ -115,7 +115,7 @@ function ScheduleStreakCard({
       to="/panel"
       className="group block rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
     >
-      <div className="p-5 pb-3">
+      <div className="p-4 sm:p-5 pb-3">
         <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           {es.home.scheduleStreak}
         </p>
@@ -124,7 +124,7 @@ function ScheduleStreakCard({
           <div
             className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
               isActive
-                ? 'bg-gradient-to-br from-orange-400 to-red-500 shadow-md drop-shadow-[0_0_10px_rgba(251,146,60,0.45)]'
+                ? 'bg-gradient-to-br from-warning to-danger shadow-md drop-shadow-[0_0_10px_rgba(251,146,60,0.45)]'
                 : 'bg-muted'
             }`}
           >
@@ -149,10 +149,10 @@ function ScheduleStreakCard({
               </p>
             )}
             {isActive && todayPct === 100 && (
-              <p className="mt-0.5 text-xs font-medium text-green-600">{es.home.scheduleStreakPerfect}</p>
+              <p className="mt-0.5 text-xs font-medium text-success-dark">{es.home.scheduleStreakPerfect}</p>
             )}
             {hasPending && (
-              <p className="mt-0.5 text-xs text-amber-600">{es.home.scheduleStreakPending}</p>
+              <p className="mt-0.5 text-xs text-warning-dark">{es.home.scheduleStreakPending}</p>
             )}
           </div>
 
@@ -175,7 +175,7 @@ function ScheduleStreakCard({
 
             return (
               <div key={day.date} className="flex flex-col items-center gap-1">
-                <span className={`text-[10px] font-medium ${day.date === today ? '' : 'text-muted-foreground'}`}>
+                <span className={`text-[0.625rem] font-medium ${day.date === today ? '' : 'text-muted-foreground'}`}>
                   {label}
                 </span>
                 <div
@@ -183,11 +183,11 @@ function ScheduleStreakCard({
                     isFuture
                       ? 'bg-muted'
                       : perfect
-                        ? 'bg-green-500 shadow-sm shadow-green-200'
-                        : atThreshold
-                          ? 'bg-amber-400 shadow-sm shadow-amber-200/50'
-                          : passed
-                            ? 'bg-amber-500 shadow-sm shadow-amber-200'
+                      ? 'bg-success shadow-sm shadow-success-light'
+                      : atThreshold
+                        ? 'bg-warning shadow-sm shadow-warning-light/50'
+                        : passed
+                          ? 'bg-warning-dark shadow-sm shadow-warning-light'
                             : day.planned > 0
                               ? 'bg-muted-foreground/30'
                               : 'bg-muted'
@@ -259,7 +259,7 @@ function HabitsStreakCard({ streaks }: { streaks: StreakEntry[] }) {
       to="/habits"
       className="group block rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
     >
-      <div className="p-5 pb-3">
+      <div className="p-4 sm:p-5 pb-3">
         <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           {es.home.habitsStreak}
         </p>
@@ -268,12 +268,12 @@ function HabitsStreakCard({ streaks }: { streaks: StreakEntry[] }) {
           <div
             className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
               isActive && bestIsDone
-                ? 'bg-gradient-to-br from-orange-400 to-red-500 shadow-md drop-shadow-[0_0_10px_rgba(251,146,60,0.45)]'
+                ? 'bg-gradient-to-br from-warning to-danger shadow-md drop-shadow-[0_0_10px_rgba(251,146,60,0.45)]'
                 : 'bg-muted'
             }`}
           >
             {bestCompleted ? (
-              <Crown className="h-7 w-7 text-amber-200 drop-shadow-[0_0_4px_rgba(255,255,255,0.5)]" strokeWidth={2.5} />
+              <Crown className="h-7 w-7 text-warning-light drop-shadow-[0_0_4px_rgba(255,255,255,0.5)]" strokeWidth={2.5} />
             ) : (
               <Flame
                 className={`h-7 w-7 ${
@@ -290,7 +290,7 @@ function HabitsStreakCard({ streaks }: { streaks: StreakEntry[] }) {
             {isActive ? (
               <>
                 <p className="truncate text-base font-semibold">{bestTitle}</p>
-                <p className="mt-0.5 text-sm font-medium text-orange-600">
+                <p className="mt-0.5 text-sm font-medium text-warning-dark">
                   {es.streak.dayOf.replace('{current}', String(bestDay))}
                 </p>
               </>
@@ -319,7 +319,7 @@ function HabitsStreakCard({ streaks }: { streaks: StreakEntry[] }) {
                       key={s.habit.id}
                       className={`h-4 w-4 transition-colors ${
                         isDone
-                          ? 'text-orange-500 drop-shadow-[0_0_4px_rgba(251,146,60,0.5)]'
+                          ? 'text-warning drop-shadow-[0_0_4px_rgba(251,146,60,0.5)]'
                           : 'text-muted-foreground/30'
                       }`}
                       strokeWidth={2.5}
@@ -328,7 +328,7 @@ function HabitsStreakCard({ streaks }: { streaks: StreakEntry[] }) {
                 })}
             </div>
             {message && (
-              <p className="ml-3 text-[10px] leading-tight text-muted-foreground">{message}</p>
+              <p className="ml-3 text-[0.625rem] leading-tight text-muted-foreground">{message}</p>
             )}
           </div>
         </div>
@@ -336,7 +336,7 @@ function HabitsStreakCard({ streaks }: { streaks: StreakEntry[] }) {
 
       {totalCount === 0 && restartableCount > 0 && (
         <div className="border-t px-5 py-3">
-          <p className="text-[10px] leading-tight text-muted-foreground">{message}</p>
+          <p className="text-[0.625rem] leading-tight text-muted-foreground">{message}</p>
         </div>
       )}
     </Link>

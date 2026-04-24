@@ -12,19 +12,19 @@ export function ComplianceBar({ compliancePct, passed }: ComplianceBarProps) {
   const isPerfect = compliancePct >= 100;
 
   const barColor = isPerfect
-    ? 'bg-green-500'
+    ? 'bg-success'
     : isAboveThreshold
-      ? 'bg-green-500'
+      ? 'bg-success'
       : compliancePct >= threshold * 0.6
-        ? 'bg-orange-500'
-        : 'bg-red-500';
+        ? 'bg-warning'
+        : 'bg-danger';
   const textColor = isPerfect
-    ? 'text-green-600'
+    ? 'text-success-dark'
     : isAboveThreshold
-      ? 'text-green-600'
+      ? 'text-success-dark'
       : compliancePct >= threshold * 0.6
-        ? 'text-orange-600'
-        : 'text-red-600';
+        ? 'text-warning-dark'
+        : 'text-danger-dark';
 
   return (
     <div className="space-y-1.5">
@@ -46,7 +46,7 @@ export function ComplianceBar({ compliancePct, passed }: ComplianceBarProps) {
           style={{ left: `${threshold}%` }}
         />
       </div>
-      <p className="text-[10px] text-muted-foreground">
+      <p className="text-[0.625rem] text-muted-foreground">
         {isPerfect ? '¡Cumplimiento perfecto!' : isAboveThreshold ? `¡Sobre el umbral del ${threshold}%!` : compliancePct >= threshold * 0.6 ? `Te falta un poco más para llegar al ${threshold}%` : `Necesitas >${threshold}% para avanzar`}
       </p>
     </div>
